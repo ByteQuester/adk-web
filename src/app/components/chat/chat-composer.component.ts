@@ -12,6 +12,7 @@ export class ChatComposerComponent {
   @Input() selectedFiles: { file: File; url: string }[] = [];
   @Input() updatedSessionState: any = null;
   @Input() userInput: string = '';
+  @Output() userInputChange = new EventEmitter<string>();
   @Input() isAudioRecording: boolean = false;
   @Input() isVideoRecording: boolean = false;
 
@@ -22,7 +23,6 @@ export class ChatComposerComponent {
   @Output() toggleAudioRecording = new EventEmitter<void>();
   @Output() toggleVideoRecording = new EventEmitter<void>();
   @Output() updateState = new EventEmitter<void>();
-  @Output() userInputChange = new EventEmitter<string>();
 }
 
 

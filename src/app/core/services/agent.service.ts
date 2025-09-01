@@ -54,11 +54,32 @@ export class AgentService {
     this.isLoading.next(true);
     return new Observable<string>((observer) => {
       const self = this;
+      let buffer = '';
+      const queue: string[] = [];
+      let draining = false;
+
+      const drainQueue = () => {
+        if (draining) return;
+        draining = true;
+        const step = () => {
+          const data = queue.shift();
+          if (data !== undefined) {
+            self.zone.run(() => observer.next(data));
+            // Yield to the UI between items from the same network chunk
+            setTimeout(step, 0);
+          } else {
+            draining = false;
+          }
+        };
+        setTimeout(step, 0);
+      };
       fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
         },
         body: JSON.stringify(req),
       })
@@ -76,22 +97,21 @@ export class AgentService {
                     return observer.complete();
                   }
                   const chunk = decoder.decode(value, {stream: true});
-                  lastData += chunk;
-                  try {
-                    const lines = lastData.split(/\r?\n/).filter(
-                        (line) => line.startsWith('data:'));
-                    lines.forEach((line) => {
+                  buffer += chunk;
+                  // Split into lines but keep the last partial line in buffer
+                  const parts = buffer.split(/\r?\n/);
+                  const completeLines = parts.slice(0, -1);
+                  buffer = parts[parts.length - 1] ?? '';
+
+                  for (const line of completeLines) {
+                    if (line.startsWith('data:')) {
                       const data = line.replace(/^data:\s*/, '');
-                      JSON.parse(data);
-                      self.zone.run(() => observer.next(data));
-                    });
-                    lastData = '';
-                  } catch (e) {
-                    // the data is not a valid json, it could be an incomplete
-                    // chunk. we ignore it and wait for the next chunk.
-                    if (e instanceof SyntaxError) {
-                      read();
+                      // Do not JSON.parse here; downstream expects raw JSON string.
+                      queue.push(data);
                     }
+                  }
+                  if (queue.length) {
+                    drainQueue();
                   }
                   read();  // Read the next chunk
                 })

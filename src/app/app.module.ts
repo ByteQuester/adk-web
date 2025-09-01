@@ -24,6 +24,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
+import {MatToolbarModule} from '@angular/material/toolbar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {AppComponent} from './app.component';
 import {ComponentModule} from './components/component.module';
@@ -38,10 +39,12 @@ import {SessionService, SESSION_SERVICE} from './core/services/session.service';
 import {VideoService, VIDEO_SERVICE} from './core/services/video.service';
 import {WebSocketService, WEBSOCKET_SERVICE} from './core/services/websocket.service';
 import { TraceService, TRACE_SERVICE } from './core/services/trace.service';
+import { AboutComponent } from './components/about/about.component';
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
+    AboutComponent,
     ComponentModule,
     BrowserModule,
     FormsModule,
@@ -51,6 +54,7 @@ import { TraceService, TRACE_SERVICE } from './core/services/trace.service';
     MatFormFieldModule,
     MatButtonModule,
     BrowserAnimationsModule,
+    MatToolbarModule,
   ],
   providers: [
     {provide: SESSION_SERVICE, useClass: SessionService},

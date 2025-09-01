@@ -7,7 +7,9 @@ export class ChatSessionViewService {
     ctx.eventData.clear();
     ctx.eventMessageIndexArray = [];
     ctx.messages = [];
-    ctx.messagesSubject.next(ctx.messages);
+    if (ctx.store && ctx.store.setMessages) {
+      ctx.store.setMessages(ctx.messages);
+    }
     ctx.artifacts = [];
   }
 

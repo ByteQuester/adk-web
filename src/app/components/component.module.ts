@@ -71,7 +71,6 @@ import {TraceTabComponent} from './trace-tab/trace-tab.component';
 import {TraceTreeComponent} from './trace-tab/trace-tree/trace-tree.component';
 import {ViewImageDialogComponent} from './view-image-dialog/view-image-dialog.component';
 
-
 const COMPONENTS = [
   ChatComponent,
   PendingEventDialogComponent,

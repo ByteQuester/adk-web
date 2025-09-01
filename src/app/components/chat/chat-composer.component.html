@@ -46,7 +46,7 @@
         cdkAutosizeMaxRows="10"
         [ngModel]="userInput"
         (ngModelChange)="userInputChange.emit($event)"
-        (keydown.enter)="sendMessage.emit($event)"
+        (keyup.enter)="sendMessage.emit($event)"
         placeholder="Type a Message..."
         style="caret-color: white"
       ></textarea>
@@ -63,6 +63,10 @@
           </mat-menu>
         </div>
         <div>
+          <button mat-icon-button matSuffix type="button" (click)="sendMessage.emit($event)"
+            class="function-event-button" matTooltip="Send message">
+            <mat-icon>send</mat-icon>
+          </button>
           <button mat-icon-button matSuffix (click)="toggleAudioRecording.emit()"
             [ngStyle]="{'background-color': isAudioRecording ? 'rgb(234, 67, 53)' : 'rgb(51, 53, 55)'}"
             [matTooltip]="isAudioRecording ? 'Turn off microphone' : 'Use microphone'">

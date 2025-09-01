@@ -13,5 +13,13 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+<mat-toolbar color="primary">
+  <span>ADK Web UI</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/chat">Chat</a>
+  <a mat-button routerLink="/about">About</a>
+</mat-toolbar>
 
-<app-chat></app-chat>
+<div style="flex: 1; overflow: auto;">
+  <router-outlet></router-outlet>
+</div>

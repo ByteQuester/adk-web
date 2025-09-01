@@ -28,10 +28,12 @@ export class ChatStreamService {
     }
     this.store.scrollInterrupted.set(false);
 
+    this.store.isModelThinking.set(true);
+
     event.preventDefault();
     if (!ctx.userInput.trim() && ctx.selectedFiles.length <= 0) return;
 
-    ctx.loggingService.log(ctx.userInput);
+    // ctx.loggingService.log(ctx.userInput);
 
     if (event instanceof KeyboardEvent) {
       if ((event as KeyboardEvent).isComposing || (event as KeyboardEvent).keyCode === 229) {
@@ -47,6 +49,13 @@ export class ChatStreamService {
     if (ctx.selectedFiles.length > 0) {
       const messageAttachments = ctx.selectedFiles.map((file: any) => ({ file: file.file, url: file.url }));
       ctx.messages.push({ role: 'user', attachments: messageAttachments });
+      this.store.setMessages(ctx.messages);
+    }
+
+    // Ensure a visible thinking indicator appears immediately
+    const last = ctx.messages[ctx.messages.length - 1];
+    if (!last || !last.isLoading) {
+      ctx.messages.push({ role: 'bot', isLoading: true });
       this.store.setMessages(ctx.messages);
     }
 
@@ -83,8 +92,12 @@ export class ChatStreamService {
         }
         ctx.changeDetectorRef.detectChanges();
       },
-      error: (err) => console.error('SSE error:', err),
+      error: (err) => {
+        console.error('SSE error:', err);
+        this.store.isModelThinking.set(false);
+      },
       complete: () => {
+        this.store.isModelThinking.set(false);
         ctx.streamingTextMessage = null;
         ctx.sessionTab.reloadSession(ctx.sessionId);
         ctx.eventService.getTrace(ctx.sessionId)
@@ -158,7 +171,7 @@ export class ChatStreamService {
     const renderedContent = chunkJson.groundingMetadata?.searchEntryPoint?.renderedContent;
 
     if (part.text) {
-      ctx.isModelThinkingSubject.next(false);
+      // If this is a thought, keep the typing indicator visible
       const newChunk = part.text;
       if (part.thought) {
         if (newChunk !== ctx.latestThought) {
@@ -167,7 +180,16 @@ export class ChatStreamService {
           ctx.insertMessageBeforeLoadingMessage(thoughtMessage);
         }
         ctx.latestThought = newChunk;
+        // Still thinking; keep indicator on
+        this.store.isModelThinking.set(true);
       } else if (!ctx.streamingTextMessage) {
+        // First non-thought token: remove thinking indicator if present
+        const last = ctx.messages[ctx.messages.length - 1];
+        if (last?.isLoading) {
+          ctx.messages.pop();
+          this.store.setMessages(ctx.messages);
+        }
+        this.store.isModelThinking.set(false);
         ctx.streamingTextMessage = { role: 'bot', text: processThoughtText(newChunk), thought: !!part.thought, eventId: chunkJson.id };
         if (renderedContent) {
           ctx.streamingTextMessage.renderedContent = chunkJson.groundingMetadata.searchEntryPoint.renderedContent;
@@ -183,21 +205,27 @@ export class ChatStreamService {
         if (renderedContent) {
           ctx.streamingTextMessage.renderedContent = chunkJson.groundingMetadata.searchEntryPoint.renderedContent;
         }
-        if (newChunk == ctx.streamingTextMessage.text) {
-          this.storeEvents(ctx, part, chunkJson, index);
-          ctx.eventMessageIndexArray[index] = newChunk;
-          ctx.streamingTextMessage = null;
-          return;
+        // Support both cumulative and delta chunking from the server.
+        const previousText = ctx.streamingTextMessage.text || '';
+        let nextText = newChunk;
+        if (!newChunk.startsWith(previousText)) {
+          // Treat as delta token chunk
+          nextText = previousText + newChunk;
         }
-        ctx.streamingTextMessage.text += newChunk;
-        ctx.streamingTextMessageSubject.next(ctx.streamingTextMessage);
+        // Directly update the visible text for smooth, immediate streaming
+        ctx.streamingTextMessage.text = nextText;
+        this.store.streamingTextMessage.set(ctx.streamingTextMessage);
+        // Keep event index updated with the latest full text
+        this.storeEvents(ctx, part, chunkJson, index);
+        ctx.eventMessageIndexArray[index] = nextText;
       }
     } else if (!part.thought) {
-      ctx.isModelThinkingSubject.next(false);
+      // Non-text and not a thought update -> not "thinking"
+      this.store.isModelThinking.set(false);
       this.storeEvents(ctx, part, chunkJson, index);
       this.storeMessage(ctx, part, chunkJson, index, chunkJson.author === 'user' ? 'user' : 'bot');
     } else {
-      ctx.isModelThinkingSubject.next(true);
+      this.store.isModelThinking.set(true);
     }
   }
 
