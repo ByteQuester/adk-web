@@ -25,6 +25,9 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatToolbarModule} from '@angular/material/toolbar';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {AppComponent} from './app.component';
 import {ComponentModule} from './components/component.module';
@@ -55,6 +58,9 @@ import { AboutComponent } from './components/about/about.component';
     MatButtonModule,
     BrowserAnimationsModule,
     MatToolbarModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatMenuModule,
   ],
   providers: [
     {provide: SESSION_SERVICE, useClass: SessionService},

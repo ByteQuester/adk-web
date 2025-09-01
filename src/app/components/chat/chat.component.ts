@@ -42,6 +42,7 @@ import { ChatStreamService } from './chat-stream.service';
 import { ChatStoreService } from './chat-store.service';
 import { ChatEvalService } from './chat-eval.service';
 import { ChatSessionViewService } from './chat-session-view.service';
+import { UsageGateService } from '../saas/usage-gate.service';
 import {AudioPlayerComponent} from '../audio-player/audio-player.component';
 import {EditJsonDialogComponent} from '../edit-json-dialog/edit-json-dialog.component';
 import {EvalCase, EvalTabComponent} from '../eval-tab/eval-tab.component';
@@ -131,6 +132,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected openBase64InNewTab = openBase64InNewTab;
   protected MediaType = MediaType;
+  usageGate = inject(UsageGateService);
+  usageGateDismissed = false;
 
   // Sync query params with value from agent picker.
   private readonly router = inject(Router);
@@ -358,6 +361,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async sendMessage(event: Event) {
+    if (this.usageGate.isLimited() && !this.usageGateDismissed) {
+      this.openSnackBar('Free limit reached. Please upgrade to continue.', 'OK');
+      return;
+    }
+    // Count a try when user sends a message
+    this.usageGate.increment();
     await this.chatStreamService.sendMessage(this, event);
   }
 

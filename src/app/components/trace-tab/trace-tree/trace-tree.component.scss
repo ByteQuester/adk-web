@@ -21,7 +21,7 @@
 
 .trace-label {
   width: 400px;
-  color: #e3e3e3;
+  color: var(--text-primary);
   font-family: 'Google Sans Mono', monospace;
   font-size: 13px;
   font-style: normal;
@@ -42,18 +42,18 @@
 .trace-bar {
   position: absolute;
   height: 18px;
-  background-color: #2f4d65;
+  background-color: rgba(138, 180, 248, 0.25);
   border-radius: 4px;
   padding-left: 4px;
   overflow: hidden;
   font-size: 11px;
   line-height: 16px;
-  color: #8dabbf;
+  color: var(--text-primary);
   font-family: 'Google Sans';
 }
 
 .trace-duration {
-  color: #888;
+  color: var(--text-secondary);
   font-weight: normal;
   margin-left: 4px;
 }
@@ -67,12 +67,12 @@
   cursor: pointer;
 
   &:hover {
-    background-color: #3b3d3c;
+    background-color: var(--surface-bg);
   }
 }
 
 .trace-row.selected {
-  background-color: #3b3d3c;
+  background-color: var(--surface-bg);
 }
 
 .trace-indent {
@@ -94,7 +94,7 @@
   bottom: 0;
   left: 9px;
   width: 1px;
-  background-color: #ccc;
+  background-color: rgba(138, 180, 248, 0.25);
 }
 
 .horizontal-line {
@@ -103,7 +103,7 @@
   left: 9px;
   width: 10px;
   height: 1px;
-  background-color: #ccc;
+  background-color: rgba(138, 180, 248, 0.25);
 }
 
 .trace-row-left {

@@ -19,11 +19,13 @@ import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import { AboutComponent } from './components/about/about.component';
 import { ChatComponent } from './components/chat/chat.component';
+import { PricingComponent } from './components/pricing/pricing.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/chat', pathMatch: 'full' },
   { path: 'chat', component: ChatComponent },
   { path: 'about', component: AboutComponent },
+  { path: 'pricing', loadComponent: () => Promise.resolve(PricingComponent) },
 ];
 
 @NgModule({

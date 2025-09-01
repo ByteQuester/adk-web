@@ -208,6 +208,10 @@
             <div class="toolbar-session-id">{{ sessionId }}</div>
           </div>
           <div class="toolbar-actions">
+            <button mat-stroked-button color="primary" class="new-session-button" (click)="onNewSessionClick()">
+              <mat-icon>add</mat-icon>
+              New Session
+            </button>
             <div class="toolbar-sse-toggle">
               <mat-slide-toggle
                 class="example-margin"
@@ -222,10 +226,6 @@
               style="margin-left: 8px; margin-right: 8px; height: 22px"
             ></mat-divider>
             <div style="display: flex; align-items: center">
-              <div (click)="onNewSessionClick()" class="toolbar-new-sesison">
-                <mat-icon>add</mat-icon>
-                New Session
-              </div>
               <span
                 class="material-symbols-outlined toolbar-icon"
                 matTooltip="Delete current session"
@@ -253,6 +253,9 @@
       </div>
     }
     <mat-card class="chat-card">
+      @if (usageGate.isLimited()) {
+        <app-upgrade-cta (close)="usageGateDismissed = true" />
+      }
       @if (!selectedAppControl.value) {
         @if (isLoadingApps()) {
           <div class="empty-state-container">
@@ -387,7 +390,7 @@
                             [data]="message.text"
                             [ngStyle]="{
                               'font-style': message.thought ? 'italic' : 'normal',
-                              color: message.thought ? '#9aa0a6' : 'white'
+                              color: message.thought ? 'var(--text-secondary)' : 'var(--text-primary)'
                             }"
                           ></markdown>
                         }

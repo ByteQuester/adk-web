@@ -2,7 +2,7 @@
  * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * You may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -19,13 +19,13 @@
 .events-wrapper {
   padding-left: 25px;
   padding-right: 25px;
-  color: #9aa0a6;
+  color: var(--text-secondary);
   font-size: 14px;
   font-weight: 700;
 }
 
 .event-index {
-  color: #80868b;
+  color: var(--text-secondary);
   font-family: Roboto;
   font-size: 14px;
   font-style: normal;
@@ -58,8 +58,8 @@
 .event-list {
   @include mat.list-overrides(
     (
-      active-indicator-color: orange,
-      list-item-container-color: #2b2b2f,
+      active-indicator-color: #8ab4f8,
+      list-item-container-color: var(--surface-card),
       list-item-label-text-size: 14px,
       list-item-label-text-weight: 400,
       list-item-one-line-container-height: 52px,
@@ -68,11 +68,11 @@
 }
 
 :host ::ng-deep .mdc-list-item {
-  border: 1px solid #5f6368;
+  border: 1px solid rgba(138, 180, 248, 0.16);
   cursor: pointer;
 
   &:hover {
-    background-color: #1c1b1c;
+    background-color: var(--surface-bg);
   }
 }
 

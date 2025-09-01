@@ -14,11 +14,34 @@
  limitations under the License.
 -->
 <mat-toolbar color="primary">
-  <span>ADK Web UI</span>
+  <span class="brand">
+    <img src="assets/ADK-512-color.svg" width="24" height="24" alt="ADK" />
+    ADK Web
+  </span>
   <span class="spacer"></span>
   <a mat-button routerLink="/chat">Chat</a>
+  <button mat-button [matMenuTriggerFor]="productsMenu">Products</button>
   <a mat-button routerLink="/about">About</a>
+  <button mat-icon-button [matMenuTriggerFor]="accountMenu" aria-label="Account">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+  <button mat-icon-button aria-label="Toggle theme" (click)="toggleTheme()" matTooltip="Toggle light/dark">
+    <mat-icon>{{ (isDark() ? 'light_mode' : 'dark_mode') }}</mat-icon>
+  </button>
 </mat-toolbar>
+
+<mat-menu #productsMenu="matMenu">
+  <button mat-menu-item routerLink="/pricing">Pricing</button>
+  <button mat-menu-item disabled>Docs (soon)</button>
+  <button mat-menu-item disabled>Changelog (soon)</button>
+  <button mat-menu-item disabled>Roadmap (soon)</button>
+  <button mat-menu-item disabled>Support (soon)</button>
+</mat-menu>
+
+<mat-menu #accountMenu="matMenu">
+  <button mat-menu-item disabled>Sign in (soon)</button>
+  <button mat-menu-item disabled>Sign up (soon)</button>
+</mat-menu>
 
 <div style="flex: 1; overflow: auto;">
   <router-outlet></router-outlet>

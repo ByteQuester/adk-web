@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-import {Component} from '@angular/core';
+import {Component, computed, inject} from '@angular/core';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -23,4 +24,11 @@ import {Component} from '@angular/core';
   styleUrl: './app.component.scss',
   standalone: false,
 })
-export class AppComponent {}
+export class AppComponent {
+  private readonly theme = inject(ThemeService);
+  isDark = computed(() => this.theme.isDark());
+
+  toggleTheme() {
+    this.theme.toggle();
+  }
+}

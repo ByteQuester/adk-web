@@ -24,7 +24,7 @@
 
 .drawer-container {
   height: 100%;
-  background-color: #131314;
+  background-color: var(--surface-bg);
 }
 
 .generated-image-container {
@@ -48,7 +48,7 @@
 }
 
 .event-container {
-  color: white;
+  color: var(--text-primary);
 }
 
 .html-artifact-container {
@@ -82,7 +82,7 @@
   flex: 1;
   min-height: 12%;
   box-shadow: none;
-  background-color: #131314;
+  background-color: var(--surface-bg);
 }
 
 .loading-bar {
@@ -124,21 +124,26 @@
   overflow-y: auto;
   padding: 20px;
   margin-top: 16px;
+  scroll-behavior: smooth;
 }
 
 .message-card {
-  padding: 5px 20px;
-  margin: 5px;
-  border-radius: 20px;
+  padding: 10px 16px;
+  margin: 8px 6px;
+  border-radius: 16px;
   max-width: 80%;
   font-size: 14px;
   font-weight: 400;
   position: relative;
   display: inline-block;
+  border: 1px solid rgba(138, 180, 248, 0.08);
+  animation: bubbleIn 180ms ease-out both;
 }
 
 .function-event-button {
-  background-color: white;
+  background-color: var(--surface-card);
+  color: var(--text-primary);
+  border-color: rgba(138, 180, 248, 0.24) !important;
   margin: 5px 5px 10px;
 }
 
@@ -148,14 +153,19 @@
   color: white !important;
 }
 
+/* Ensure invoke/execute badges and nested bars are readable */
+::host ::ng-deep .mat-expansion-panel, ::host ::ng-deep .mat-expansion-panel-header {
+  color: var(--text-primary);
+}
+
 .user-message {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   .message-card {
-    background-color: #303030;
+    background-color: var(--bubble-user);
     align-self: flex-end;
-    color: white;
+    color: var(--text-primary);
     box-shadow: none;
   }
 }
@@ -164,9 +174,9 @@
   display: flex;
   align-items: center;
   .message-card {
-    background-color: #303030;
+    background-color: var(--bubble-bot);
     align-self: flex-start;
-    color: white;
+    color: var(--text-primary);
     box-shadow: none;
   }
 }
@@ -179,14 +189,14 @@
 }
 
 .message-textarea {
-  background-color: #303030;
+  background-color: var(--bubble-user);
   max-width: 100%;
   border: none;
   font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
 }
 
 .message-textarea:focus {
-  background-color: #131314;
+  background-color: var(--surface-bg);
   outline: none;
 }
 
@@ -334,18 +344,36 @@
 }
 
 .side-drawer {
-  background-color: #1b1b1b;
-  color: white;
+  background-color: var(--surface-card);
+  color: var(--text-primary);
   border-radius: 0;
+  animation: drawerSlide 220ms ease-out;
 }
 
 .tabs-container {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 12px;
+}
+
+::ng-deep .mat-mdc-tab-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--surface-card);
+}
+
+@keyframes bubbleIn {
+  from { transform: translateY(4px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes drawerSlide {
+  from { transform: translateX(-6px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 .tab-label {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .file-preview {
@@ -424,6 +452,7 @@ button {
     white-space: pre-line;
     word-break: break-word;
     overflow-wrap: break-word;
+    color: var(--text-primary);
   }
 }
 
@@ -498,7 +527,7 @@ button {
 
 .trace-detail-container {
   position: relative;
-  background-color: #1b1b1b;
+  background-color: var(--surface-card);
 
   app-trace-event {
     padding-top: 8px;
@@ -511,12 +540,16 @@ button {
   width: 130px;
   height: 28px;
   font-size: 14px;
+  white-space: nowrap;
+  border-color: rgba(138, 180, 248, 0.24) !important;
+  color: var(--text-primary) !important;
+  background: var(--surface-card) !important;
 }
 
 .app-select-container {
   width: 35%;
   margin-top: 12px;
-  background-color: #212123;
+  background-color: var(--surface-card);
   margin-left: 10px;
   height: 30px;
   display: flex;
@@ -530,9 +563,9 @@ button {
 .app-select-container {
   @include mat.select-overrides(
     (
-      placeholder-text-color: #8ab4f8,
-      enabled-trigger-text-color: #8ab4f8,
-      enabled-arrow-color: #8ab4f8,
+      placeholder-text-color: var(--text-secondary),
+      enabled-trigger-text-color: var(--text-primary),
+      enabled-arrow-color: var(--text-secondary),
     )
   );
 }
@@ -596,7 +629,7 @@ button {
   position: sticky;
   top: 0;
   height: 48px;
-  background: #1b1b1b;
+  background: var(--surface-card);
   display: flex;
   align-items: center;
   z-index: 10;
@@ -618,7 +651,7 @@ button {
 }
 
 .toolbar-session-text {
-  color: #fdfdfd;
+  color: var(--text-primary);
   font-family: Roboto;
   font-size: 12px;
   font-style: normal;
@@ -631,7 +664,7 @@ button {
 }
 
 .toolbar-session-id {
-  color: #9aa0a6;
+  color: var(--text-secondary);
   font-family: 'Google Sans Mono', monospace;
   font-size: 14px;
   font-style: normal;
@@ -804,7 +837,7 @@ button {
 
 .app-name-option,
 .app-select {
-  color: #504e51;
+  color: var(--text-primary);
   font-family: 'Google Sans Mono', monospace;
   font-style: normal;
   font-weight: 400;

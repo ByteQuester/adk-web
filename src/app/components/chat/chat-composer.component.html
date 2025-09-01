@@ -68,12 +68,12 @@
             <mat-icon>send</mat-icon>
           </button>
           <button mat-icon-button matSuffix (click)="toggleAudioRecording.emit()"
-            [ngStyle]="{'background-color': isAudioRecording ? 'rgb(234, 67, 53)' : 'rgb(51, 53, 55)'}"
+            [ngStyle]="{'background-color': isAudioRecording ? 'rgb(234, 67, 53)' : 'var(--surface-card)'}"
             [matTooltip]="isAudioRecording ? 'Turn off microphone' : 'Use microphone'">
             <mat-icon>mic</mat-icon>
           </button>
           <button mat-icon-button matSuffix (click)="toggleVideoRecording.emit()"
-            [ngStyle]="{'background-color': isVideoRecording ? 'rgb(234, 67, 53)' : 'rgb(51, 53, 55)'}"
+            [ngStyle]="{'background-color': isVideoRecording ? 'rgb(234, 67, 53)' : 'var(--surface-card)'}"
             [matTooltip]="isVideoRecording ? 'Turn off camera' : 'Use camera'">
             <mat-icon>videocam</mat-icon>
           </button>
