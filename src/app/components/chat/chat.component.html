@@ -41,6 +41,7 @@
             <img src="assets/ADK-512-color.svg" width="32px" height="32px" />
             Agent Development Kit
           </div>
+          <a routerLink="/about" [queryParams]="{version: '1.0'}" style="color: white; margin-left: 20px;">About</a>
           <span
             class="material-symbols-outlined"
             style="color: #c4c7c5; cursor: pointer; margin-right: 15px"
@@ -237,7 +238,7 @@
           </div>
         } @else {
           <div style="display: flex">
-            <div class="toolbar-session-text">Session ID</div>
+            <div class="toolbar-session-text">Conversation ID</div>
             <div class="toolbar-session-id">{{ sessionId }}</div>
           </div>
           <div class="toolbar-actions">
@@ -259,6 +260,7 @@
                 <mat-icon>add</mat-icon>
                 New Session
               </div>
+              <button mat-button (click)="toggleLogin()">{{ isLoggedIn ? 'Logout' : 'Login' }}</button>
               <span
                 class="material-symbols-outlined toolbar-icon"
                 matTooltip="Delete current session"
@@ -421,6 +423,9 @@
                               color: message.thought ? '#9aa0a6' : 'white'
                             }"
                           ></markdown>
+                          @if (message.role === 'bot' && message.eventId) {
+                            <div style="font-size: 10px; color: #9aa0a6; margin-top: 5px;">Event ID: {{ message.eventId }}</div>
+                          }
                         }
                       }
                     </div>
@@ -635,7 +640,7 @@
           }
         </div>
       }
-      @if (appName != "" && isChatMode()) {
+      @if (appName != "" && isChatMode() && isLoggedIn) {
         <div class="chat-input">
           <input type="file" multiple hidden (change)="onFileSelect($event)" #fileInput />
           <mat-form-field class="input-field" appearance="outline">

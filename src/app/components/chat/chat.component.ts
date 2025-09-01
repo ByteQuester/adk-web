@@ -1,23 +1,7 @@
-/**
- * @license
- * Copyright 2025 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import {DOCUMENT, Location} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
 import {AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Inject, inject, OnDestroy, OnInit, Renderer2, signal, ViewChild, WritableSignal} from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import {FormControl} from '@angular/forms';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {MatPaginatorIntl} from '@angular/material/paginator';
@@ -28,66 +12,50 @@ import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
 import {instance} from '@viz-js/viz';
 import {BehaviorSubject, catchError, combineLatest, distinctUntilChanged, filter, map, Observable, of, shareReplay, switchMap, take, tap} from 'rxjs';
 import stc from 'string-to-color';
+import { ROOT_AGENT, CustomPaginatorIntl, BIDI_STREAMING_RESTART_WARNING, LLM_REQUEST_KEY, LLM_RESPONSE_KEY } from './chat.constants';
+import { formatBase64Data, createDefaultArtifactName, processThoughtText, updateRedirectUri } from './chat.utils';
+import { ChatMessage, ArtifactView, EventData } from './chat.models';
 
 import {URLUtil} from '../../../utils/url-util';
 import {AgentRunRequest} from '../../core/models/AgentRunRequest';
 import {Session} from '../../core/models/Session';
 import {AgentService, AGENT_SERVICE} from '../../core/services/agent.service';
 import {ArtifactService, ARTIFACT_SERVICE} from '../../core/services/artifact.service';
+import { ChatArtifactService } from './chat-artifact.service';
+import { ChatOauthService } from './chat-oauth.service';
+import { ChatRoutingService } from './chat-routing.service';
 import {AudioService, AUDIO_SERVICE} from '../../core/services/audio.service';
 import {DownloadService, DOWNLOAD_SERVICE} from '../../core/services/download.service';
 import {EvalService, EVAL_SERVICE} from '../../core/services/eval.service';
 import {EventService, EVENT_SERVICE} from '../../core/services/event.service';
+import { ChatEventService } from './chat-event.service';
 import {FeatureFlagService, FEATURE_FLAG_SERVICE} from '../../core/services/feature-flag.service';
 import {SessionService, SESSION_SERVICE} from '../../core/services/session.service';
 import {TraceService, TRACE_SERVICE} from '../../core/services/trace.service';
 import {VideoService, VIDEO_SERVICE} from '../../core/services/video.service';
 import {WebSocketService, WEBSOCKET_SERVICE} from '../../core/services/websocket.service';
+import { ChatRecordingService } from './chat-recording.service';
+import { ChatSessionService } from './chat-session.service';
 import {ResizableDrawerDirective} from '../../directives/resizable-drawer.directive';
 import {getMediaTypeFromMimetype, MediaType, openBase64InNewTab} from '../artifact-tab/artifact-tab.component';
+import { ChatStreamService } from './chat-stream.service';
+import { ChatStoreService } from './chat-store.service';
+import { ChatEvalService } from './chat-eval.service';
+import { ChatSessionViewService } from './chat-session-view.service';
 import {AudioPlayerComponent} from '../audio-player/audio-player.component';
 import {EditJsonDialogComponent} from '../edit-json-dialog/edit-json-dialog.component';
 import {EvalCase, EvalTabComponent} from '../eval-tab/eval-tab.component';
 import {EventTabComponent} from '../event-tab/event-tab.component';
 import {PendingEventDialogComponent} from '../pending-event-dialog/pending-event-dialog.component';
-import {DeleteSessionDialogComponent, DeleteSessionDialogData,} from '../session-tab/delete-session-dialog/delete-session-dialog.component';
+import {
+  DeleteSessionDialogComponent,
+  DeleteSessionDialogData,
+} from '../session-tab/delete-session-dialog/delete-session-dialog.component';
 import {SessionTabComponent} from '../session-tab/session-tab.component';
 import {ViewImageDialogComponent} from '../view-image-dialog/view-image-dialog.component';
+import {LoggingService} from '../../core/services/logging.service';
 
-const ROOT_AGENT = 'root_agent';
-
-function fixBase64String(base64: string): string {
-  // Replace URL-safe characters if they exist
-  base64 = base64.replace(/-/g, '+').replace(/_/g, '/');
-
-  // Fix base64 padding
-  while (base64.length % 4 !== 0) {
-    base64 += '=';
-  }
-
-  return base64;
-}
-
-class CustomPaginatorIntl extends MatPaginatorIntl {
-  override nextPageLabel = 'Next Event';
-  override previousPageLabel = 'Previous Event';
-  override firstPageLabel = 'First Event';
-  override lastPageLabel = 'Last Event';
-
-  override getRangeLabel = (page: number, pageSize: number, length: number) => {
-    if (length === 0) {
-      return `Event 0 of ${length}`;
-    }
-
-    length = Math.max(length, 0);
-    const startIndex = page * pageSize;
-
-    return `Event ${startIndex + 1} of ${length}`;
-  };
-}
-
-const BIDI_STREAMING_RESTART_WARNING =
-  'Restarting bidirectional streaming is not currently supported. Please refresh the page or start a new session.';
+ 
 
 @Component({
   selector: 'app-chat',
@@ -98,7 +66,8 @@ const BIDI_STREAMING_RESTART_WARNING =
   providers: [{ provide: MatPaginatorIntl, useClass: CustomPaginatorIntl }],
 })
 export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('videoContainer', { read: ElementRef }) videoContainer!: ElementRef;
+  @ViewChild('videoContainer', { read: ElementRef })
+  videoContainer!: ElementRef;
   @ViewChild('sideDrawer') sideDrawer!: MatDrawer;
   @ViewChild(EventTabComponent) eventTabComponent!: EventTabComponent;
   @ViewChild(SessionTabComponent) sessionTab!: SessionTabComponent;
@@ -113,13 +82,14 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   isEvalCaseEditing = signal(false);
   hasEvalCaseChanged = signal(false);
   isEvalEditMode = signal(false);
+  isLoggedIn = false;
   videoElement!: HTMLVideoElement;
   currentMessage = '';
-  messages: any[] = [];
+  messages: ChatMessage[] = [];
   lastTextChunk: string = '';
-  streamingTextMessage: any | null = null;
+  streamingTextMessage: (ChatMessage & { text?: string; renderedContent?: string }) | null = null;
   latestThought: string = '';
-  artifacts: any[] = [];
+  artifacts: ArtifactView[] = [];
   userInput: string = '';
   userEditEvalCaseMessage: string = '';
   userId = 'user';
@@ -138,16 +108,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   currentSessionState = {};
   root_agent = ROOT_AGENT;
   updatedSessionState = signal(null);
-  private readonly messagesSubject = new BehaviorSubject<any[]>([]);
-  private readonly streamingTextMessageSubject =
-    new BehaviorSubject<any | null>(null);
-  private readonly scrollInterruptedSubject = new BehaviorSubject(true);
-  private readonly isModelThinkingSubject = new BehaviorSubject(false);
+  private readonly store = inject(ChatStoreService);
 
   // TODO: Remove this once backend supports restarting bidi streaming.
   sessionHasUsedBidi = new Set<string>();
 
-  eventData = new Map<string, any>();
+  eventData = new Map<string, EventData>();
   traceData: any[] = [];
   eventMessageIndexArray: any[] = [];
   renderedEventGraph: SafeHtml | undefined;
@@ -157,8 +123,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedEventIndex: any = undefined;
   llmRequest: any = undefined;
   llmResponse: any = undefined;
-  llmRequestKey = 'gcp.vertex.agent.llm_request';
-  llmResponseKey = 'gcp.vertex.agent.llm_response';
+  llmRequestKey = LLM_REQUEST_KEY;
+  llmResponseKey = LLM_RESPONSE_KEY;
 
   getMediaTypeFromMimetype = getMediaTypeFromMimetype;
 
@@ -224,11 +190,17 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       private sanitizer: DomSanitizer,
       @Inject(SESSION_SERVICE) private sessionService: SessionService,
       @Inject(ARTIFACT_SERVICE) private artifactService: ArtifactService,
+      private chatArtifactService: ChatArtifactService,
+      private chatOauthService: ChatOauthService,
+      private chatRoutingService: ChatRoutingService,
       @Inject(AUDIO_SERVICE) private audioService: AudioService,
       @Inject(WEBSOCKET_SERVICE) private webSocketService: WebSocketService,
       @Inject(VIDEO_SERVICE) private videoService: VideoService,
       private dialog: MatDialog,
       @Inject(EVENT_SERVICE) private eventService: EventService,
+      private chatEventService: ChatEventService,
+      private chatEvalService: ChatEvalService,
+      private chatSessionViewService: ChatSessionViewService,
       private route: ActivatedRoute,
       @Inject(DOWNLOAD_SERVICE) private downloadService: DownloadService,
       @Inject(EVAL_SERVICE) private evalService: EvalService,
@@ -238,6 +210,10 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       @Inject(DOCUMENT) private document: Document,
       @Inject(AGENT_SERVICE) private agentService: AgentService,
       @Inject(FEATURE_FLAG_SERVICE) private featureFlagService: FeatureFlagService,
+      private loggingService: LoggingService,
+      private chatRecordingService: ChatRecordingService,
+      private chatSessionService: ChatSessionService,
+      private chatStreamService: ChatStreamService,
   ) {
     this.importSessionEnabledObs =
         this.featureFlagService.isImportSessionEnabled();
@@ -274,25 +250,25 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     combineLatest([
-      this.agentService.getLoadingState(), this.isModelThinkingSubject
+      this.agentService.getLoadingState(), toObservable(this.store.isModelThinking)
     ]).subscribe(([isLoading, isModelThinking]) => {
       const lastMessage = this.messages[this.messages.length - 1];
 
       if (isLoading) {
         if (!lastMessage?.isLoading && !this.streamingTextMessage) {
           this.messages.push({ role: 'bot', isLoading: true });
-          this.messagesSubject.next(this.messages);
+          this.store.setMessages(this.messages);
         }
       } else if (lastMessage?.isLoading && !isModelThinking) {
         this.messages.pop();
-        this.messagesSubject.next(this.messages);
+        this.store.setMessages(this.messages);
         this.changeDetectorRef.detectChanges();
       }
     });
 
     combineLatest([
-      this.messagesSubject, this.scrollInterruptedSubject,
-      this.streamingTextMessageSubject
+      toObservable(this.store.messages), toObservable(this.store.scrollInterrupted),
+      toObservable(this.store.streamingTextMessage)
     ]).subscribe(([messages, scrollInterrupted, streamingTextMessage]) => {
       if (!scrollInterrupted) {
         setTimeout(() => {
@@ -385,218 +361,18 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async sendMessage(event: Event) {
-    if (this.messages.length === 0) {
-      this.scrollContainer.nativeElement.addEventListener('wheel', () => {
-        this.scrollInterruptedSubject.next(true);
-      });
-      this.scrollContainer.nativeElement.addEventListener('touchmove', () => {
-        this.scrollInterruptedSubject.next(true);
-      });
-    }
-    this.scrollInterruptedSubject.next(false);
-
-    event.preventDefault();
-    if (!this.userInput.trim() && this.selectedFiles.length <= 0) return;
-
-    if (event instanceof KeyboardEvent) {
-      // support for japanese IME
-      if (event.isComposing || event.keyCode === 229) {
-        return;
-      }
-    }
-
-    // Add user message
-    if (!!this.userInput.trim()) {
-      this.messages.push({role: 'user', text: this.userInput});
-      this.messagesSubject.next(this.messages);
-    }
-
-    // Add user message attachments
-    if (this.selectedFiles.length > 0) {
-      const messageAttachments = this.selectedFiles.map((file) => ({
-        file: file.file,
-        url: file.url,
-      }));
-      this.messages.push({ role: 'user', attachments: messageAttachments });
-      this.messagesSubject.next(this.messages);
-    }
-
-    const req: AgentRunRequest = {
-      appName: this.appName,
-      userId: this.userId,
-      sessionId: this.sessionId,
-      newMessage: {
-        'role': 'user',
-        'parts': await this.getUserMessageParts(),
-      },
-      streaming: this.useSse,
-      stateDelta: this.updatedSessionState(),
-    };
-    this.selectedFiles = [];
-    let index = this.eventMessageIndexArray.length - 1;
-    this.streamingTextMessage = null;
-    this.agentService.runSse(req).subscribe({
-      next: async (chunk) => {
-        if (chunk.startsWith('{"error"')) {
-          this.openSnackBar(chunk, 'OK');
-          return;
-        }
-        const chunkJson = JSON.parse(chunk);
-        if (chunkJson.error) {
-          this.openSnackBar(chunkJson.error, 'OK');
-          return;
-        }
-        if (chunkJson.content) {
-          for (let part of chunkJson.content.parts) {
-            index += 1;
-            this.processPart(chunkJson, part, index);
-            this.traceService.setEventData(this.eventData);
-          }
-        } else if (chunkJson.errorMessage) {
-          this.processErrorMessage(chunkJson, index)
-        }
-        this.changeDetectorRef.detectChanges();
-      },
-      error: (err) => console.error('SSE error:', err),
-      complete: () => {
-        this.streamingTextMessage = null;
-        this.sessionTab.reloadSession(this.sessionId);
-        this.eventService.getTrace(this.sessionId)
-            .pipe(catchError((error) => {
-              if (error.status === 404) {
-                return of(null);
-              }
-              return of([]);
-            }))
-            .subscribe(res => {
-              this.traceData = res;
-              this.changeDetectorRef.detectChanges();
-            });
-        this.traceService.setMessages(this.messages);
-      },
-    });
-    // Clear input
-    this.userInput = '';
-    this.updatedSessionState.set(null);
-    this.changeDetectorRef.detectChanges();
+    await this.chatStreamService.sendMessage(this, event);
   }
 
   private processErrorMessage(chunkJson: any, index: number) {
-    this.storeEvents(chunkJson, chunkJson, index);
-    this.insertMessageBeforeLoadingMessage(
-        {text: chunkJson.errorMessage, role: 'bot'})
+    this.chatStreamService.processErrorMessage(this, chunkJson, index);
   }
 
   private processPart(chunkJson: any, part: any, index: number) {
-    const renderedContent =
-      chunkJson.groundingMetadata?.searchEntryPoint?.renderedContent;
-
-    if (part.text) {
-      this.isModelThinkingSubject.next(false);
-      const newChunk = part.text;
-      if (part.thought) {
-        if (newChunk !== this.latestThought) {
-          this.storeEvents(part, chunkJson, index);
-          let thoughtMessage = {
-            role: 'bot',
-            text: this.processThoughtText(newChunk),
-            thought: true,
-            eventId: chunkJson.id
-          };
-
-          this.insertMessageBeforeLoadingMessage(thoughtMessage);
-        }
-        this.latestThought = newChunk;
-      } else if (!this.streamingTextMessage) {
-        this.streamingTextMessage = {
-          role: 'bot',
-          text: this.processThoughtText(newChunk),
-          thought: part.thought ? true : false,
-          eventId: chunkJson.id
-        };
-
-        if (renderedContent) {
-          this.streamingTextMessage.renderedContent =
-            chunkJson.groundingMetadata.searchEntryPoint.renderedContent;
-        }
-
-        this.insertMessageBeforeLoadingMessage(this.streamingTextMessage);
-
-        if (!this.useSse) {
-          this.storeEvents(part, chunkJson, index);
-          this.eventMessageIndexArray[index] = newChunk;
-          this.streamingTextMessage = null;
-          return;
-        }
-      } else {
-        if (renderedContent) {
-          this.streamingTextMessage.renderedContent =
-            chunkJson.groundingMetadata.searchEntryPoint.renderedContent;
-        }
-
-        if (newChunk == this.streamingTextMessage.text) {
-          this.storeEvents(part, chunkJson, index);
-          this.eventMessageIndexArray[index] = newChunk;
-          this.streamingTextMessage = null;
-          return;
-        }
-        this.streamingTextMessage.text += newChunk;
-        this.streamingTextMessageSubject.next(this.streamingTextMessage);
-      }
-    } else if (!part.thought) {
-      this.isModelThinkingSubject.next(false);
-      this.storeEvents(part, chunkJson, index);
-      this.storeMessage(
-        part, chunkJson, index, chunkJson.author === 'user' ? 'user' : 'bot');
-    } else {
-      this.isModelThinkingSubject.next(true);
-    }
+    this.chatStreamService.processPart(this, chunkJson, part, index, this.useSse);
   }
 
-  async getUserMessageParts() {
-    let parts: any = [];
-
-    if (!!this.userInput.trim()) {
-      parts.push({'text': `${this.userInput}`});
-    }
-
-    if (this.selectedFiles.length > 0) {
-      for (const file of this.selectedFiles) {
-        parts.push({
-          inlineData: {
-            displayName: file.file.name,
-            data: await this.readFileAsBytes(file.file),
-            mimeType: file.file.type,
-          },
-        });
-      }
-    }
-    return parts;
-  }
-
-  readFileAsBytes(file: File): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const base64Data = e.target.result.split(',')[1];
-        resolve(base64Data);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);  // Read as raw bytes
-    });
-  }
-
-  private updateRedirectUri(urlString: string, newRedirectUri: string): string {
-    try {
-      const url = new URL(urlString);
-      const searchParams = url.searchParams;
-      searchParams.set('redirect_uri', newRedirectUri);
-      return url.toString();
-    } catch (error) {
-      console.warn('Failed to update redirect URI: ', error);
-      return urlString;
-    }
-  }
+  
 
   private storeMessage(
       part: any, e: any, index: number, role: string, invocationIndex?: number,
@@ -614,14 +390,27 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
         // for OAuth
         const authUri =
           func.args.authConfig.exchangedAuthCredential.oauth2.authUri;
-        const updatedAuthUri = this.updateRedirectUri(
+        const updatedAuthUri = updateRedirectUri(
           authUri,
           this.redirectUri,
         );
-        this.openOAuthPopup(updatedAuthUri)
+        this.chatOauthService.openOAuthPopup(updatedAuthUri)
           .then((authResponseUrl) => {
             this.functionCallEventId = e.id;
-            this.sendOAuthResponse(func, authResponseUrl, this.redirectUri);
+            this.chatOauthService
+              .sendOAuthResponse(
+                func,
+                authResponseUrl,
+                this.redirectUri,
+                this.appName,
+                this.userId,
+                this.sessionId,
+                this.functionCallEventId,
+              )
+              .subscribe((response) => {
+                this.longRunningEvents.pop();
+                this.processRunSseResponse(response);
+              });
           })
           .catch((error) => {
             console.error('OAuth Error:', error);
@@ -664,7 +453,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     if (part.inlineData) {
       const base64Data =
-        this.formatBase64Data(part.inlineData.data, part.inlineData.mimeType);
+        formatBase64Data(part.inlineData.data, part.inlineData.mimeType);
       message.inlineData = {
         displayName: part.inlineData.displayName,
         data: base64Data,
@@ -716,131 +505,18 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.messages.push(message);
     }
-    this.messagesSubject.next(this.messages);
-  }
-
-  private formatBase64Data(data: string, mimeType: string) {
-    const fixedBase64Data = fixBase64String(data);
-    return `data:${mimeType};base64,${fixedBase64Data}`;
+    this.store.setMessages(this.messages);
   }
 
   private renderArtifact(artifactId: string, versionId: string) {
-    // Add a placeholder message for the artifact
-    // Feed the placeholder with the artifact data after it's fetched
-    let message = {
-      role: 'bot',
-      inlineData: {
-        data: '',
-        mimeType: 'image/png',
-      },
-    };
-    this.insertMessageBeforeLoadingMessage(message);
-
-    const currentIndex = this.messages.length - 2;
-
-    this.artifactService
-      .getArtifactVersion(
-        this.userId,
-        this.appName,
-        this.sessionId,
-        artifactId,
-        versionId,
-      )
-      .subscribe((res) => {
-        const mimeType = res.inlineData.mimeType;
-        const base64Data =
-          this.formatBase64Data(res.inlineData.data, mimeType);
-
-        const mediaType = getMediaTypeFromMimetype(mimeType);
-
-        let inlineData = {
-          name: this.createDefaultArtifactName(mimeType),
-          data: base64Data,
-          mimeType: mimeType,
-          mediaType,
-        };
-
-        this.messages[currentIndex] = {
-          role: 'bot',
-          inlineData,
-        };
-
-        // To trigger ngOnChanges in the artifact tab component
-        this.artifacts = [
-          ...this.artifacts,
-          {
-            id: artifactId,
-            data: base64Data,
-            mimeType,
-            versionId,
-            mediaType: getMediaTypeFromMimetype(mimeType),
-          },
-        ];
-      });
+    this.chatStreamService['renderArtifact'](this, artifactId, versionId);
   }
 
   private storeEvents(part: any, e: any, index: number) {
-    let title = '';
-    if (part.text) {
-      title += 'text:' + part.text;
-    } else if (part.functionCall) {
-      title += 'functionCall:' + part.functionCall.name;
-    } else if (part.functionResponse) {
-      title += 'functionResponse:' + part.functionResponse.name;
-    } else if (part.executableCode) {
-      title += 'executableCode:' + part.executableCode.code.slice(0, 10);
-    } else if (part.codeExecutionResult) {
-      title += 'codeExecutionResult:' + part.codeExecutionResult.outcome;
-    } else if (part.errorMessage) {
-      title += 'errorMessage:' + part.errorMessage
-    }
-    e.title = title;
-
-    this.eventData.set(e.id, e);
-    this.eventData = new Map(this.eventData);
+    this.chatStreamService.storeEvents(this, part, e, index);
   }
 
-  private sendOAuthResponse(
-    func: any,
-    authResponseUrl: string,
-    redirectUri: string,
-  ) {
-    this.longRunningEvents.pop();
-    const authResponse: AgentRunRequest = {
-      appName: this.appName,
-      userId: this.userId,
-      sessionId: this.sessionId,
-      newMessage: {
-        'role': 'user',
-        'parts': [],
-      },
-    };
-
-    var authConfig = structuredClone(func.args.authConfig);
-    authConfig.exchangedAuthCredential.oauth2.authResponseUri = authResponseUrl;
-    authConfig.exchangedAuthCredential.oauth2.redirectUri = redirectUri;
-
-    authResponse.functionCallEventId = this.functionCallEventId;
-    authResponse.newMessage.parts.push({
-      'function_response': {
-        id: func.id,
-        name: func.name,
-        response: authConfig,
-      },
-    });
-
-    let response: any[] = [];
-    this.agentService.runSse(authResponse).subscribe({
-      next: async (chunk) => {
-        const chunkJson = JSON.parse(chunk);
-        response.push(chunkJson);
-      },
-      error: (err) => console.error('SSE error:', err),
-      complete: () => {
-        this.processRunSseResponse(response);
-      },
-    });
-  }
+  
 
   private processRunSseResponse(response: any) {
     let index = this.eventMessageIndexArray.length - 1;
@@ -882,6 +558,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getAgentNameFromEvent(i: number) {
     const key = this.messages[i].eventId;
+    if (!key) { return ROOT_AGENT; }
     const selectedEvent = this.eventData.get(key);
 
     return selectedEvent?.author ?? ROOT_AGENT;
@@ -890,12 +567,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   customIconColorClass(i: number) {
     const agentName = this.getAgentNameFromEvent(i);
     return agentName !== ROOT_AGENT ?
-        `custom-icon-color-${stc(agentName).replace('#', '')}` :
+        `custom-icon-color-${stc(agentName ?? ROOT_AGENT).replace('#', '')}` :
         '';
   }
 
   createAgentIconColorClass(agentName: string) {
-    const agentIconColor = stc(agentName);
+    const agentIconColor = stc(agentName ?? ROOT_AGENT);
 
     const agentIconColorClass =
         `custom-icon-color-${agentIconColor.replace('#', '')}`;
@@ -906,37 +583,28 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
   clickEvent(i: number) {
     const key = this.messages[i].eventId;
+    if (!key) { return; }
 
     this.sideDrawer.open();
     this.showSidePanel = true;
     this.selectedEvent = this.eventData.get(key);
-    this.selectedEventIndex = this.getIndexOfKeyInMap(key);
-
-    this.eventService.getEventTrace(this.selectedEvent.id).subscribe((res) => {
-      this.llmRequest = JSON.parse(res[this.llmRequestKey]);
-      this.llmResponse = JSON.parse(res[this.llmResponseKey]);
-    });
-
-    this.eventService
-      .getEvent(
+    this.selectedEventIndex = this.chatEventService.getIndexOfKeyInMap(this.eventData, key);
+    
+    if (!this.selectedEvent?.id) { return; }
+    this.chatEventService
+      .loadEventDetails(
         this.userId,
         this.appName,
         this.sessionId,
         this.selectedEvent.id,
+        this.llmRequestKey,
+        this.llmResponseKey,
       )
-      .subscribe(async (res) => {
-        if (!res.dotSrc) {
-          this.renderedEventGraph = undefined;
-          return;
-        }
-        const graphSrc = res.dotSrc;
-        const viz = await instance();
-        const svg = viz.renderString(graphSrc, {
-          format: 'svg',
-          engine: 'dot',
-        });
-        this.rawSvgString = svg;
-        this.renderedEventGraph = this.sanitizer.bypassSecurityTrustHtml(svg);
+      .subscribe(({ llmRequest, llmResponse, renderedEventGraph, rawSvgString }) => {
+        this.llmRequest = llmRequest;
+        this.llmResponse = llmResponse;
+        this.renderedEventGraph = renderedEventGraph;
+        this.rawSvgString = rawSvgString ?? null;
       });
   }
 
@@ -968,27 +636,11 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   startAudioRecording() {
-    if (this.sessionHasUsedBidi.has(this.sessionId)) {
-      this.openSnackBar(BIDI_STREAMING_RESTART_WARNING, 'OK')
-      return;
-    }
-
-    this.isAudioRecording = true;
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    this.webSocketService.connect(
-      `${protocol}://${URLUtil.getWSServerUrl()}/run_live?app_name=${this.appName}&user_id=${this.userId}&session_id=${this.sessionId}`,
-    );
-    this.audioService.startRecording();
-    this.messages.push({ role: 'user', text: 'Speaking...' });
-    this.messages.push({ role: 'bot', text: 'Speaking...' });
-    this.messagesSubject.next(this.messages);
-    this.sessionHasUsedBidi.add(this.sessionId);
+    this.chatRecordingService.startAudioRecording(this);
   }
 
   stopAudioRecording() {
-    this.audioService.stopRecording();
-    this.webSocketService.closeConnection();
-    this.isAudioRecording = false;
+    this.chatRecordingService.stopAudioRecording(this);
   }
 
   toggleVideoRecording() {
@@ -997,28 +649,11 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   startVideoRecording() {
-    if (this.sessionHasUsedBidi.has(this.sessionId)) {
-      this.openSnackBar(BIDI_STREAMING_RESTART_WARNING, 'OK')
-      return;
-    }
-
-    this.isVideoRecording = true;
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    this.webSocketService.connect(
-      `${protocol}://${URLUtil.getWSServerUrl()}/run_live?app_name=${this.appName}&user_id=${this.userId}&session_id=${this.sessionId}`,
-    );
-    this.videoService.startRecording(this.videoContainer);
-    this.audioService.startRecording();
-    this.messages.push({ role: 'user', text: 'Speaking...' });
-    this.messagesSubject.next(this.messages);
-    this.sessionHasUsedBidi.add(this.sessionId);
+    this.chatRecordingService.startVideoRecording(this);
   }
 
   stopVideoRecording() {
-    this.audioService.stopRecording();
-    this.videoService.stopRecording(this.videoContainer);
-    this.webSocketService.closeConnection();
-    this.isVideoRecording = false;
+    this.chatRecordingService.stopVideoRecording(this);
   }
 
   private getAsyncFunctionsFromParts(pendingIds: any[], parts: any[]) {
@@ -1029,33 +664,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private openOAuthPopup(url: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      // Open OAuth popup
-      const popup = window.open(url, 'oauthPopup', 'width=600,height=700');
-
-      if (!popup) {
-        reject('Popup blocked!');
-        return;
-      }
-
-      // Listen for messages from the popup
-      const listener = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) {
-          return;  // Ignore messages from unknown sources
-        }
-        const { authResponseUrl } = event.data;
-        if (authResponseUrl) {
-          resolve(authResponseUrl);
-          window.removeEventListener('message', listener);
-        } else {
-          console.log('OAuth failed', event);
-        }
-      };
-
-      window.addEventListener('message', listener);
-    });
-  }
+  
 
   toggleSidePanel() {
     if (this.showSidePanel) {
@@ -1064,6 +673,10 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       this.sideDrawer.open();
     }
     this.showSidePanel = !this.showSidePanel;
+  }
+
+  toggleLogin() {
+    this.isLoggedIn = !this.isLoggedIn;
   }
 
   protected handleTabChange(event: any) {
@@ -1090,98 +703,15 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private resetEventsAndMessages() {
-    this.eventData.clear();
-    this.eventMessageIndexArray = [];
-    this.messages = [];
-    this.messagesSubject.next(this.messages);
-    this.artifacts = [];
+    this.chatSessionViewService.resetEventsAndMessages(this);
   }
 
   protected updateWithSelectedSession(session: Session) {
-    if (!session || !session.id || !session.events || !session.state) {
-      return;
-    }
-    this.traceService.resetTraceService();
-    this.sessionId = session.id;
-    this.currentSessionState = session.state;
-    this.evalCase = null;
-    this.isChatMode.set(true);
-
-    this.isSessionUrlEnabledObs.subscribe((enabled) => {
-      if (enabled) {
-        this.updateSelectedSessionUrl();
-      }
-    });
-
-    this.resetEventsAndMessages();
-    let index = 0;
-
-    session.events.forEach((event: any) => {
-      event.content?.parts?.forEach((part: any) => {
-        this.storeMessage(
-          part, event, index, event.author === 'user' ? 'user' : 'bot');
-        index += 1;
-        if (event.author && event.author !== 'user') {
-          this.storeEvents(part, event, index);
-        }
-      });
-    });
-
-    this.eventService.getTrace(this.sessionId).subscribe(res => {
-      this.traceData = res;
-      this.traceService.setEventData(this.eventData);
-      this.traceService.setMessages(this.messages);
-    });
-
-    this.bottomPanelVisible = false;
+    this.chatSessionViewService.updateWithSelectedSession(this, session);
   }
 
   protected updateWithSelectedEvalCase(evalCase: EvalCase) {
-    this.evalCase = evalCase;
-    this.isChatMode.set(false);
-
-    this.resetEventsAndMessages();
-    let index = 0;
-    let invocationIndex = 0;
-
-    for (const invocation of evalCase.conversation) {
-      if (invocation.userContent?.parts) {
-        for (const part of invocation.userContent.parts) {
-          this.storeMessage(part, null, index, 'user');
-          index++;
-        }
-      }
-
-      if (invocation.intermediateData?.toolUses) {
-        let toolUseIndex = 0;
-        for (const toolUse of invocation.intermediateData.toolUses) {
-          const functionCallPart = {
-            functionCall: {name: toolUse.name, args: toolUse.args}
-          };
-          this.storeMessage(
-              functionCallPart, null, index, 'bot', invocationIndex,
-              {toolUseIndex});
-          index++;
-          toolUseIndex++;
-
-          const functionResponsePart = { functionResponse: { name: toolUse.name } };
-          this.storeMessage(functionResponsePart, null, index, 'bot');
-          index++;
-        }
-      }
-
-      if (invocation.finalResponse?.parts) {
-        let finalResponsePartIndex = 0;
-        for (const part of invocation.finalResponse.parts) {
-          this.storeMessage(
-              part, null, index, 'bot', invocationIndex,
-              {finalResponsePartIndex});
-          index++;
-          finalResponsePartIndex++;
-        }
-      }
-      invocationIndex++;
-    }
+    this.chatEvalService.updateWithSelectedEvalCase(this, evalCase);
   }
 
   protected updateSelectedEvalSetId(evalSetId: string) {
@@ -1189,17 +719,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected editEvalCaseMessage(message: any) {
-    this.isEvalCaseEditing.set(true);
-    this.userEditEvalCaseMessage = message.text;
-    message.isEditing = true;
-    setTimeout(() => {
-      this.textarea?.nativeElement.focus();
-      let textLength = this.textarea?.nativeElement.value.length;
-      if (message.text.charAt(textLength - 1) === '\n') {
-        textLength--;
-      }
-      this.textarea?.nativeElement.setSelectionRange(textLength, textLength);
-    }, 0);
+    this.chatEvalService.editEvalCaseMessage(this, message);
   }
 
   protected editFunctionArgs(message: any) {
@@ -1229,27 +749,14 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected saveEvalCase() {
-    this.evalService
-        .updateEvalCase(
-            this.appName, this.evalSetId, this.updatedEvalCase!.evalId,
-            this.updatedEvalCase!)
-        .subscribe((res) => {
-          this.openSnackBar('Eval case updated', 'OK');
-          this.resetEditEvalCaseVars()
-        });
+    this.chatEvalService.saveEvalCase(this);
   }
 
   protected cancelEditEvalCase() {
-    this.resetEditEvalCaseVars();
-    this.updateWithSelectedEvalCase(this.evalCase!);
+    this.chatEvalService.cancelEditEvalCase(this);
   }
 
-  private resetEditEvalCaseVars() {
-    this.hasEvalCaseChanged.set(false);
-    this.isEvalCaseEditing.set(false);
-    this.isEvalEditMode.set(false);
-    this.updatedEvalCase = null;
-  }
+  private resetEditEvalCaseVars() { this.chatEvalService.resetEditEvalCaseVars(this); }
 
   protected cancelEditMessage(message: any) {
     message.isEditing = false;
@@ -1257,19 +764,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected saveEditMessage(message: any) {
-    this.hasEvalCaseChanged.set(true);
-    this.isEvalCaseEditing.set(false);
-    message.isEditing = false;
-    message.text =
-      this.userEditEvalCaseMessage ? this.userEditEvalCaseMessage : ' ';
-
-    this.updatedEvalCase = structuredClone(this.evalCase!);
-    this.updatedEvalCase!.conversation[message.invocationIndex]
-      .finalResponse!.parts![message.finalResponsePartIndex] = {
-      text: this.userEditEvalCaseMessage
-    };
-
-    this.userEditEvalCaseMessage = '';
+    this.chatEvalService.saveEditMessage(this, message);
   }
 
   protected handleKeydown(event: KeyboardEvent, message: any) {
@@ -1282,13 +777,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected deleteEvalCaseMessage(message: any, index: number) {
-    this.hasEvalCaseChanged.set(true);
-    this.messages.splice(index, 1);
-    this.messagesSubject.next(this.messages);
-
-    this.updatedEvalCase = structuredClone(this.evalCase!);
-    this.updatedEvalCase!.conversation[message.invocationIndex]
-      .finalResponse!.parts!.splice(message.finalResponsePartIndex, 1);
+    this.chatEvalService.deleteEvalCaseMessage(this, message, index);
   }
 
   protected editEvalCase() {
@@ -1358,31 +847,22 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
   selectEvent(key: string) {
     this.selectedEvent = this.eventData.get(key);
-    this.selectedEventIndex = this.getIndexOfKeyInMap(key);
-    this.eventService.getEventTrace(this.selectedEvent.id).subscribe((res) => {
-      this.llmRequest = JSON.parse(res[this.llmRequestKey]);
-      this.llmResponse = JSON.parse(res[this.llmResponseKey]);
-    });
-    this.eventService
-      .getEvent(
+    this.selectedEventIndex = this.chatEventService.getIndexOfKeyInMap(this.eventData, key);
+    if (!this.selectedEvent?.id) { return; }
+    this.chatEventService
+      .loadEventDetails(
         this.userId,
         this.appName,
         this.sessionId,
         this.selectedEvent.id,
+        this.llmRequestKey,
+        this.llmResponseKey,
       )
-      .subscribe(async (res) => {
-        if (!res.dotSrc) {
-          this.renderedEventGraph = undefined;
-          return;
-        }
-        const graphSrc = res.dotSrc;
-        const viz = await instance();
-        const svg = viz.renderString(graphSrc, {
-          format: 'svg',
-          engine: 'dot',
-        });
-        this.rawSvgString = svg;
-        this.renderedEventGraph = this.sanitizer.bypassSecurityTrustHtml(svg);
+      .subscribe(({ llmRequest, llmResponse, renderedEventGraph, rawSvgString }) => {
+        this.llmRequest = llmRequest;
+        this.llmResponse = llmResponse;
+        this.renderedEventGraph = renderedEventGraph;
+        this.rawSvgString = rawSvgString ?? null;
       });
   }
 
@@ -1417,22 +897,13 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private syncSelectedAppFromUrl() {
-    combineLatest([
-      this.router.events.pipe(
-        filter((e) => e instanceof NavigationEnd),
-        map(() => this.activatedRoute.snapshot.queryParams),
-      ),
-      this.apps$
-    ]).subscribe(([params, apps]) => {
-      if (apps && apps.length) {
-        const app = params['app'];
-        if (app && apps.includes(app)) {
+    this.chatRoutingService
+      .syncSelectedAppFromUrl$(this.apps$)
+      .subscribe((app) => {
+        if (app) {
           this.selectedAppControl.setValue(app);
-        } else if (app) {
-          this.openSnackBar(`Agent '${app}' not found`, 'OK');
         }
-      }
-    });
+      });
   }
 
   private updateSelectedAppUrl() {
@@ -1446,26 +917,17 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
         if (app === selectedAgent) {
           return;
         }
-        this.router.navigate([], {
-          queryParams: { 'app': app },
-          queryParamsHandling: 'merge',
-        });
+        this.chatRoutingService.navigateWithSelectedApp(app);
       });
   }
 
   private updateSelectedSessionUrl() {
-    const url = this.router
-                    .createUrlTree([], {
-                      queryParams: {'session': this.sessionId},
-                      queryParamsHandling: 'merge',
-                    })
-                    .toString();
-    this.location.replaceState(url);
+    this.chatRoutingService.updateSelectedSessionUrl(this.sessionId);
   }
 
   handlePageEvent(event: any) {
     if (event.pageIndex >= 0) {
-      const key = this.getKeyAtIndexInMap(event.pageIndex);
+      const key = this.chatEventService.getKeyAtIndexInMap(this.eventData, event.pageIndex);
       if (key) {
         this.selectEvent(key);
       }
@@ -1477,47 +939,13 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedEventIndex = undefined;
   }
 
-  private getIndexOfKeyInMap(key: string): number | undefined {
-    let index = 0;
-    const mapOrderPreservingSort = (a: any, b: any): number =>
-      0;  // Simple compare function
-
-    const sortedKeys = Array.from(this.eventData.keys())
-      .sort(
-        mapOrderPreservingSort,
-      );
-
-    for (const k of sortedKeys) {
-      if (k === key) {
-        return index;
-      }
-      index++;
-    }
-    return undefined;  // Key not found
-  }
-
-  private getKeyAtIndexInMap(index: number): string | undefined {
-    const mapOrderPreservingSort = (a: any, b: any): number =>
-      0;  // Simple compare function
-
-    const sortedKeys = Array.from(this.eventData.keys())
-      .sort(
-        mapOrderPreservingSort,
-      );
-
-    if (index >= 0 && index < sortedKeys.length) {
-      return sortedKeys[index];
-    }
-    return undefined;  // Index out of bounds
-  }
+  
 
   openSnackBar(message: string, action: string) {
     this._snackBar.open(message, action);
   }
 
-  private processThoughtText(text: string) {
-    return text.replace('/*PLANNING*/', '').replace('/*ACTION*/', '');
-  }
+  
 
   openLink(url: string) {
     window.open(url, '_blank');
@@ -1546,12 +974,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected exportSession() {
-    this.sessionService.getSession(this.userId, this.appName, this.sessionId)
-      .subscribe((res) => {
-        console.log(res);
-        this.downloadService.downloadObjectAsJson(
-          res, `session-${this.sessionId}.json`);
-      });
+    this.chatSessionService.exportSession(this.userId, this.appName, this.sessionId);
   }
 
   protected updateState() {
@@ -1584,44 +1007,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected importSession() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-
-    input.onchange = () => {
-      if (!input.files || input.files.length === 0) {
-        return;
-      }
-
-      const file = input.files[0];
-      const reader = new FileReader();
-
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          try {
-            const sessionData = JSON.parse(e.target.result as string);
-            if (!sessionData.userId || !sessionData.appName ||
-                !sessionData.events) {
-              this.openSnackBar('Invalid session file format', 'OK');
-              return;
-            }
-            this.sessionService
-                .importSession(
-                    sessionData.userId, sessionData.appName, sessionData.events)
-                .subscribe((res) => {
-                  this.openSnackBar('Session imported', 'OK');
-                  this.sessionTab.refreshSession();
-                });
-          } catch (error) {
-            this.openSnackBar('Error parsing session file', 'OK');
-          }
-        }
-      };
-
-      reader.readAsText(file);
-    };
-
-    input.click();
+    this.chatSessionService.importSessionFromFile(this);
   }
 
   // Helper method to dynamically inject the style

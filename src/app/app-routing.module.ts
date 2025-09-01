@@ -17,12 +17,17 @@
 
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
-import {AppComponent} from './app.component';
+import { AboutComponent } from './components/about/about.component';
+import { ChatComponent } from './components/chat/chat.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: AppComponent,
+    component: ChatComponent,
+  },
+  {
+    path: 'about',
+    component: AboutComponent,
   }
 ];
 

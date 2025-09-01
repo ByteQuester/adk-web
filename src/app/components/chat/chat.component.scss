@@ -124,7 +124,7 @@
   justify-content: flex-end;
   align-items: center;
   .message-card {
-    background-color: #004a77;
+    background-color: #bbb1cd;
     align-self: flex-end;
     color: white;
     box-shadow: none;
@@ -691,7 +691,7 @@ button {
   flex-direction: column;
   gap: 8px;
   height: 80px;
-  background-color: #1e1e1e;
+  background-color: #5c199f;
   border-radius: 12px;
 }
 
@@ -742,7 +742,7 @@ button {
   border: none;
   padding: 0;
   font: inherit;
-  color: #007bff !important;
+  color: #ff00a6 !important;
   text-decoration: underline;
   cursor: pointer;
   outline: none;
@@ -775,7 +775,7 @@ button {
 
 .app-name-option,
 .app-select {
-  color: #9aa0a6;
+  color: #504e51;
   font-family: 'Google Sans Mono', monospace;
   font-style: normal;
   font-weight: 400;

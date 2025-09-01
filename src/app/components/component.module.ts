@@ -67,6 +67,7 @@ import {TraceEventComponent} from './trace-tab/trace-event/trace-event.component
 import {TraceTabComponent} from './trace-tab/trace-tab.component';
 import {TraceTreeComponent} from './trace-tab/trace-tree/trace-tree.component';
 import {ViewImageDialogComponent} from './view-image-dialog/view-image-dialog.component';
+import { RouterModule } from '@angular/router';
 
 const COMPONENTS = [
   ChatComponent,
@@ -129,7 +130,7 @@ const COMPONENTS = [
     MatDialogModule,
     MatButtonToggleModule,
     MatMenuModule,
+    RouterModule,
   ],
 })
-export class ComponentModule {
-}
+export class ComponentModule {}
