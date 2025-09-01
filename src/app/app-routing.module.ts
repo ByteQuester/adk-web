@@ -1,5 +1,5 @@
 /**
- * @license
+ * @LICENSE
  * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +17,12 @@
 
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
-import { AboutComponent } from './components/about/about.component';
-import { ChatComponent } from './components/chat/chat.component';
+import {AppComponent} from './app.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: ChatComponent,
-  },
-  {
-    path: 'about',
-    component: AboutComponent,
+    component: AppComponent,
   }
 ];
 

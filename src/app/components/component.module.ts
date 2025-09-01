@@ -51,6 +51,9 @@ import {ResizableDrawerDirective} from '../directives/resizable-drawer.directive
 import {ArtifactTabComponent} from './artifact-tab/artifact-tab.component';
 import {AudioPlayerComponent} from './audio-player/audio-player.component';
 import {ChatComponent} from './chat/chat.component';
+import { ChatSidePanelComponent } from './chat/chat-side-panel.component';
+import { ChatComposerComponent } from './chat/chat-composer.component';
+import { ChatMessageListComponent } from './chat/chat-message-list.component';
 import {EditJsonDialogComponent} from './edit-json-dialog/edit-json-dialog.component';
 import {AddEvalSessionDialogComponent} from './eval-tab/add-eval-session-dialog/add-eval-session-dialog/add-eval-session-dialog.component';
 import {EvalTabComponent} from './eval-tab/eval-tab.component';
@@ -67,7 +70,7 @@ import {TraceEventComponent} from './trace-tab/trace-event/trace-event.component
 import {TraceTabComponent} from './trace-tab/trace-tab.component';
 import {TraceTreeComponent} from './trace-tab/trace-tree/trace-tree.component';
 import {ViewImageDialogComponent} from './view-image-dialog/view-image-dialog.component';
-import { RouterModule } from '@angular/router';
+
 
 const COMPONENTS = [
   ChatComponent,
@@ -91,6 +94,9 @@ const COMPONENTS = [
   TraceTreeComponent,
   TraceEventComponent,
   JsonEditorComponent,
+  ChatSidePanelComponent,
+  ChatComposerComponent,
+  ChatMessageListComponent,
 ];
 
 @NgModule({
@@ -130,7 +136,6 @@ const COMPONENTS = [
     MatDialogModule,
     MatButtonToggleModule,
     MatMenuModule,
-    RouterModule,
   ],
 })
 export class ComponentModule {}

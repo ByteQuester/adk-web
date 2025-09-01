@@ -53,7 +53,6 @@ import {
 } from '../session-tab/delete-session-dialog/delete-session-dialog.component';
 import {SessionTabComponent} from '../session-tab/session-tab.component';
 import {ViewImageDialogComponent} from '../view-image-dialog/view-image-dialog.component';
-import {LoggingService} from '../../core/services/logging.service';
 
  
 
@@ -82,7 +81,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   isEvalCaseEditing = signal(false);
   hasEvalCaseChanged = signal(false);
   isEvalEditMode = signal(false);
-  isLoggedIn = false;
   videoElement!: HTMLVideoElement;
   currentMessage = '';
   messages: ChatMessage[] = [];
@@ -210,7 +208,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       @Inject(DOCUMENT) private document: Document,
       @Inject(AGENT_SERVICE) private agentService: AgentService,
       @Inject(FEATURE_FLAG_SERVICE) private featureFlagService: FeatureFlagService,
-      private loggingService: LoggingService,
       private chatRecordingService: ChatRecordingService,
       private chatSessionService: ChatSessionService,
       private chatStreamService: ChatStreamService,
@@ -673,10 +670,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       this.sideDrawer.open();
     }
     this.showSidePanel = !this.showSidePanel;
-  }
-
-  toggleLogin() {
-    this.isLoggedIn = !this.isLoggedIn;
   }
 
   protected handleTabChange(event: any) {

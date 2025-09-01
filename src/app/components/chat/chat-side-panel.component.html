@@ -1,0 +1,44 @@
+<div class="details-panel-container">
+  <div class="details-content">
+    <div style="display: flex; justify-content: flex-end; margin-top: 10px">
+      <mat-paginator
+        class="event-paginator"
+        [length]="eventsCount"
+        [pageSize]="1"
+        [pageIndex]="selectedEventIndex ?? 0"
+        (page)="page.emit($event)"
+        aria-label="Select event"
+      >
+      </mat-paginator>
+      <button mat-mini-fab>
+        <mat-icon (click)="closePanel.emit()">close</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div>
+    <mat-tab-group>
+      <mat-tab label="Event">
+        <div class="event-graph-container">
+          @if (renderedEventGraph) {
+            <div [innerHtml]="renderedEventGraph" (click)="viewImage.emit(rawSvgString)"></div>
+          }
+        </div>
+        <div class="json-viewer-container">
+          <ngx-json-viewer [json]="selectedEvent"></ngx-json-viewer>
+        </div>
+      </mat-tab>
+      <mat-tab label="Request">
+        <div class="json-viewer-container">
+          <ngx-json-viewer [json]="llmRequest"></ngx-json-viewer>
+        </div>
+      </mat-tab>
+      <mat-tab label="Response">
+        <div class="json-viewer-container">
+          <ngx-json-viewer [json]="llmResponse"></ngx-json-viewer>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>
+
+
