@@ -20,12 +20,24 @@ import {RouterModule, Routes} from '@angular/router';
 import { AboutComponent } from './components/about/about.component';
 import { ChatComponent } from './components/chat/chat.component';
 import { PricingComponent } from './components/pricing/pricing.component';
+import { SignInComponent } from './components/saas/sign-in.component';
+import { SignUpComponent } from './components/saas/sign-up.component';
+import { AccountComponent } from './components/saas/account.component';
+import { BillingComponent } from './components/saas/billing.component';
+import { SandboxComponent } from './components/saas/sandbox.component';
+import { SupabaseService } from './core/services/supabase.service';
+import { authGuard } from './core/services/auth.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: '/chat', pathMatch: 'full' },
   { path: 'chat', component: ChatComponent },
   { path: 'about', component: AboutComponent },
   { path: 'pricing', loadComponent: () => Promise.resolve(PricingComponent) },
+  { path: 'signin', loadComponent: () => Promise.resolve(SignInComponent) },
+  { path: 'signup', loadComponent: () => Promise.resolve(SignUpComponent) },
+  { path: 'account', loadComponent: () => Promise.resolve(AccountComponent), canActivate: [authGuard] },
+  { path: 'billing', loadComponent: () => Promise.resolve(BillingComponent), canActivate: [authGuard] },
+  { path: 'sandbox', loadComponent: () => Promise.resolve(SandboxComponent), canActivate: [authGuard] },
 ];
 
 @NgModule({

@@ -1,0 +1,55 @@
+.page {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 0 12px;
+}
+
+mat-card {
+  display: block;
+}
+
+.section {
+  margin: 8px 0 20px;
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.usage-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  margin: 8px 0;
+}
+
+.usage-remaining {
+  color: rgba(0,0,0,0.6);
+  margin-bottom: 16px;
+}
+
+.cta {
+  margin: 8px 0 4px;
+}
+
+.spacer { flex: 1; }
+
+.kv {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 6px 12px;
+  align-items: center;
+  margin: 6px 0;
+}
+
+.kv.subtle .k,
+.kv.subtle .v {
+  color: rgba(0,0,0,0.6);
+}
+
+.ml {
+  margin-left: 8px;
+}
+
+

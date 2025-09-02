@@ -24,6 +24,9 @@ html[data-theme="dark"] {
     color: theme.$primary-palette,
     density: 0
   ));
+  /* App tokens missing in some components */
+  --bg-surface: var(--surface-card);
+  --border-subtle: rgba(255,255,255,0.06);
 }
 
 html {
@@ -73,6 +76,9 @@ html[data-theme="light"] {
     color: theme.$primary-palette,
     density: 0
   ));
+  /* App tokens missing in some components */
+  --bg-surface: var(--surface-card);
+  --border-subtle: rgba(0,0,0,0.08);
 }
 
 /* App design tokens for dark/light surfaces and bubbles */

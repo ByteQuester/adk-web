@@ -15,9 +15,12 @@
  * limitations under the License.
  */
 
-import {Component, computed, inject} from '@angular/core';
+import {Component, EventEmitter, Output, computed, inject, signal} from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ThemeService } from './core/services/theme.service';
+import { UsageGateService } from './components/saas/usage-gate.service';
 
 @Component({
   selector: 'app-root',
@@ -28,12 +31,36 @@ import { ThemeService } from './core/services/theme.service';
 export class AppComponent {
   private readonly theme = inject(ThemeService);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  protected usage = inject(UsageGateService);
   isDark = computed(() => this.theme.isDark());
   scrolled = false;
   isAnyDialogOpen = false;
+  chatMainTab = signal<'chat'|'features'>('chat');
+  @Output() toggleChatSidePanel = new EventEmitter<void>();
+
+  isChatRoute() {
+    const url = this.router.url || '';
+    return url.startsWith('/chat');
+  }
+
+  setChatMainTab(tab: 'chat'|'features') {
+    const current = this.chatMainTab();
+    if (current === tab) return;
+    this.chatMainTab.set(tab);
+    const child = this.activatedRoute.firstChild;
+    if (child) {
+      this.router.navigate([], { queryParams: { mainTab: tab }, queryParamsHandling: 'merge', relativeTo: child });
+    }
+  }
 
   toggleTheme() {
     this.theme.toggle();
+  }
+
+  resetTrial() {
+    try { this.usage.reset(); } catch {}
   }
 
   onContentScroll(event: Event) {
@@ -42,12 +69,27 @@ export class AppComponent {
     this.scrolled = offset > 4;
   }
 
+  onToggleLeftPanel() {
+    try {
+      window.dispatchEvent(new Event('toggleChatSidePanel'));
+    } catch {}
+  }
+
   constructor() {
     this.dialog.afterOpened.subscribe(() => this.isAnyDialogOpen = true);
     this.dialog.afterAllClosed.subscribe(() => this.isAnyDialogOpen = false);
     // Also listen for overlay open/close events for menus via capturing clicks
     document.addEventListener('click', () => {
       // no-op; menu close will restore toolbar blur automatically
+    });
+    // Initialize from current route
+    const initialChild = this.activatedRoute.firstChild;
+    const initialTab = initialChild?.snapshot.queryParams['mainTab'];
+    this.chatMainTab.set(initialTab === 'features' ? 'features' : 'chat');
+    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
+      const child = this.activatedRoute.firstChild;
+      const tab = child?.snapshot.queryParams['mainTab'];
+      this.chatMainTab.set(tab === 'features' ? 'features' : 'chat');
     });
   }
 }

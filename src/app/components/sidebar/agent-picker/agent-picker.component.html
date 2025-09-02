@@ -1,0 +1,24 @@
+<div class="agent-panel">
+  <div class="agent-panel-header" (click)="toggle.emit()">
+    <div class="agent-current">{{ value || 'Select an agent' }}</div>
+    <mat-icon [class.rotated]="isOpen">expand_more</mat-icon>
+  </div>
+  @if (isOpen) {
+    <div class="agent-panel-body">
+      <app-agent-search-input
+        class="agent-filter"
+        [value]="filterText"
+        (keydownEvent)="filterKeydown.emit($event)"
+      ></app-agent-search-input>
+      <app-agent-option-list
+        class="agent-options"
+        [apps]="apps"
+        [activeIndex]="activeIndex"
+        (keydownEvent)="listKeydown.emit($event)"
+        (select)="onSelect($event)"
+      ></app-agent-option-list>
+    </div>
+  }
+</div>
+
+

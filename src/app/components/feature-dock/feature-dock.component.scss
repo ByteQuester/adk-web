@@ -1,0 +1,63 @@
+.feature-dock {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-dock.fullscreen {
+  position: absolute;
+  top: 56px; /* offset below sub-toolbar */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-top: none;
+}
+
+.dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  color: var(--text-secondary, #c4c7c5);
+  background: transparent;
+}
+
+.tab.active {
+  color: var(--text-primary, #e3e3e3);
+  border-color: var(--border-subtle);
+  background: color-mix(in oklab, var(--surface-card) 92%, var(--accent-1) 8%);
+}
+
+.dock-content {
+  overflow: auto;
+}
+
+.empty {
+  padding: 16px;
+  color: var(--text-secondary, #c4c7c5);
+}
+
+

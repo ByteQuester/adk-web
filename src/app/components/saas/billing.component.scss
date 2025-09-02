@@ -1,0 +1,32 @@
+.billing-page {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 0 12px;
+}
+
+.page {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 0 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.label {
+  font-weight: 600;
+}
+
+.value {
+  margin-top: 2px;
+}
+
+.hint {
+  color: rgba(0,0,0,0.6);
+  margin-top: 8px;
+}
+

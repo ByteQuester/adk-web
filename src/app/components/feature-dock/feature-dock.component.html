@@ -1,0 +1,46 @@
+<div class="feature-dock" [class.fullscreen]="fullscreen" [attr.appResizableBottomPanel]="fullscreen ? null : ''">
+  <div class="bottom-resize-handler"></div>
+  <div class="dock-header">
+    <div class="tabs">
+      <button class="tab" [class.active]="selectedTab==='trace'" (click)="onSelect('trace')">
+        <span class="material-symbols-outlined">timeline</span>
+        Trace
+      </button>
+      <button class="tab" [class.active]="selectedTab==='events'" (click)="onSelect('events')">
+        <span class="material-symbols-outlined">list_alt</span>
+        Events
+      </button>
+      
+      <button class="tab" [class.active]="selectedTab==='artifacts'" (click)="onSelect('artifacts')">
+        <span class="material-symbols-outlined">image</span>
+        Artifacts
+      </button>
+    </div>
+    <div class="actions">
+      <button mat-icon-button (click)="toggleLeftPanel()" matTooltip="Toggle left panel">
+        <mat-icon>left_panel_open</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div class="dock-content">
+    @switch (selectedTab) {
+      @case ('trace') {
+        <app-trace-tab [traceData]="traceData"></app-trace-tab>
+      }
+      @case ('events') {
+        <app-event-tab
+          [eventsMap]="eventsMap"
+          [traceData]="traceData"
+          (selectedEvent)="selectedEvent.emit($event)"
+          (openTraceDeepDive)="openTraceDeepDive.emit($event)"
+        ></app-event-tab>
+      }
+      
+      @case ('artifacts') {
+        <app-artifact-tab [artifacts]="artifacts"></app-artifact-tab>
+      }
+    }
+  </div>
+</div>
+
+

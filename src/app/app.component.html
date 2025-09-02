@@ -25,6 +25,9 @@
   <button mat-icon-button [matMenuTriggerFor]="accountMenu" aria-label="Account">
     <mat-icon>account_circle</mat-icon>
   </button>
+  <button mat-button (click)="resetTrial()" matTooltip="Reset trial for testing">
+    Trial: reset ({{ usage.count }}/{{ usage.limit }})
+  </button>
   <button mat-icon-button aria-label="Toggle theme" (click)="toggleTheme()" matTooltip="Toggle light/dark">
     <mat-icon>{{ (isDark() ? 'light_mode' : 'dark_mode') }}</mat-icon>
   </button>
@@ -39,8 +42,11 @@
 </mat-menu>
 
 <mat-menu #accountMenu="matMenu">
-  <button mat-menu-item disabled>Sign in (soon)</button>
-  <button mat-menu-item disabled>Sign up (soon)</button>
+  <button mat-menu-item routerLink="/signin">Sign in</button>
+  <button mat-menu-item routerLink="/signup">Sign up</button>
+  <button mat-menu-item routerLink="/account">Account</button>
+  <button mat-menu-item routerLink="/billing">Billing</button>
+  <button mat-menu-item routerLink="/sandbox">Trial sandbox</button>
 </mat-menu>
 
 <div style="flex: 1; overflow: auto;" (scroll)="onContentScroll($event)" [class.scrolled]="scrolled">

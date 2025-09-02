@@ -33,13 +33,31 @@
       >left_panel_open</span
     >
   }
+  @if (!showSidePanel && mainTab === 'features') {
+    <span
+      class="material-symbols-outlined"
+      style="
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        color: #c4c7c5;
+        cursor: pointer;
+        margin-left: 20px;
+        margin-top: 20px;
+        z-index: 9999;
+      "
+      matTooltip="Open panel"
+      (click)="toggleSidePanel()"
+      >left_panel_open</span
+    >
+  }
   <mat-drawer class="side-drawer" #sideDrawer mode="side" appResizableDrawer>
     <div style="margin-top: 20px; margin-left: 20px; display: flex">
       <div style="width: 100%">
         <div class="drawer-header">
           <div class="drawer-logo">
             <img src="assets/ADK-512-color.svg" width="32px" height="32px" />
-            Agent Development Kit
+            {{ formatAppDisplayName(appName || (selectedAppControl.value || '')) }}
           </div>
           <span
             class="material-symbols-outlined"
@@ -51,113 +69,18 @@
         </div>
       </div>
     </div>
-    <div class="agent-panel">
-      <div class="agent-panel-header" (click)="toggleAgentPanel()">
-        <div class="agent-current">{{ selectedAppControl.value || 'Select an agent' }}</div>
-        <mat-icon [class.rotated]="isAgentPanelOpen">expand_more</mat-icon>
-      </div>
-      @if (isAgentPanelOpen) {
-        <div class="agent-panel-body">
-          <input
-            class="agent-filter"
-            type="text"
-            placeholder="Filter agents"
-            [(ngModel)]="agentFilterText"
-            (keydown)="onAgentFilterKeydown($event)"
-          />
-          <div class="agent-options" #agentOptionsList (keydown)="onAgentListKeydown($event)" tabindex="0">
-            @if (apps$ | async; as availableApps) {
-              @for (appName of filterApps(availableApps); track appName; let i = $index) {
-                <div
-                  class="agent-option"
-                  [class.active]="i === activeAgentIndex"
-                  (click)="selectAgentFromPicker(appName)"
-                >
-                  {{ appName }}
-                </div>
-              }
-            }
-          </div>
-        </div>
-      }
-    </div>
     @if (appName != "" && showSidePanel) {
-      <div class="tabs-container vertical">
-        <div class="side-nav">
-          <button class="side-nav-item" [class.active]="selectedSideTab==='trace'" (click)="selectSideTab('trace')">
-            <mat-icon>timeline</mat-icon>
-            <span>Trace</span>
-          </button>
-          <button class="side-nav-item" [class.active]="selectedSideTab==='events'" (click)="selectSideTab('events')">
-            <mat-icon>list_alt</mat-icon>
-            <span>Events</span>
-          </button>
-          <button class="side-nav-item" [class.active]="selectedSideTab==='state'" (click)="selectSideTab('state')">
-            <mat-icon>tune</mat-icon>
-            <span>State</span>
-          </button>
-          <button class="side-nav-item" [class.active]="selectedSideTab==='artifacts'" (click)="selectSideTab('artifacts')">
-            <mat-icon>image</mat-icon>
-            <span>Artifacts</span>
-          </button>
-          <button class="side-nav-item" [class.active]="selectedSideTab==='sessions'" (click)="selectSideTab('sessions')">
-            <mat-icon>history</mat-icon>
-            <span>Sessions</span>
-          </button>
-          @if (shouldShowEvalTab()) {
-            <button class="side-nav-item" [class.active]="selectedSideTab==='eval'" (click)="selectSideTab('eval')">
-              <mat-icon>checklist</mat-icon>
-              <span>Eval</span>
-            </button>
-          }
-        </div>
-        <div class="side-content">
-          @switch (selectedSideTab) {
-            @case ('trace') {
-              <app-trace-tab
-                [traceData]="traceData"
-                (openTraceDeepDive)="openTraceDeepDive($event)"
-              ></app-trace-tab>
-            }
-            @case ('events') {
-              <app-event-tab
-                [eventsMap]="eventData"
-                [traceData]="traceData"
-                (selectedEvent)="openEventDeepDive($event)"
-                (openTraceDeepDive)="openTraceDeepDive($event)"
-              ></app-event-tab>
-            }
-            @case ('state') { <app-state-tab [sessionState]="currentSessionState"></app-state-tab> }
-            @case ('artifacts') { <app-artifact-tab [artifacts]="artifacts"></app-artifact-tab> }
-            @case ('sessions') {
-              <app-session-tab
-                [userId]="userId"
-                [appName]="appName"
-                [sessionId]="sessionId"
-                (sessionSelected)="updateWithSelectedSession($event)"
-                (sessionReloaded)="updateSessionState($event)"
-              ></app-session-tab>
-            }
-            @case ('eval') {
-              @if (shouldShowEvalTab()) {
-                <app-eval-tab
-                  [appName]="appName"
-                  [userId]="userId"
-                  [sessionId]="sessionId"
-                  (shouldShowTab)="handleShouldShowEvalTab($event)"
-                  (sessionSelected)="updateWithSelectedSession($event)"
-                  (evalCaseSelected)="updateWithSelectedEvalCase($event)"
-                  (evalSetIdSelected)="updateSelectedEvalSetId($event)"
-                  (shouldReturnToSession)="handleReturnToSession($event)"
-                  (evalNotInstalledMsg)="handleEvalNotInstalled($event)"
-                ></app-eval-tab>
-              }
-            }
-          }
-        </div>
+      <div class="side-content" style="padding: 0 16px 16px 16px;">
+        <app-session-tab
+          [userId]="userId"
+          [appName]="appName"
+          [sessionId]="sessionId"
+          (sessionSelected)="updateWithSelectedSession($event)"
+          (sessionReloaded)="updateSessionState($event)"
+        ></app-session-tab>
       </div>
     }
-    @if (this.selectedEvent && showSidePanel && !isDeepDiveOpen) {
+    @if (this.selectedEvent && showSidePanel && !isDeepDiveOpen && mainTab === 'chat') {
       <app-chat-side-panel
         [selectedEvent]="selectedEvent"
         [selectedEventIndex]="selectedEventIndex"
@@ -174,25 +97,23 @@
     <div class="resize-handler"></div>
   </mat-drawer>
   <div class="chat-container">
-    @if (appName != "") {
+    @if (appName != "" && mainTab === 'chat') {
       <div class="chat-toolbar" [ngClass]="{'edit-mode': isEvalEditMode()}">
-        @if (!showSidePanel) {
-          <span
-            class="material-symbols-outlined"
-            style="
-              width: 24px;
-              height: 24px;
-              color: #c4c7c5;
-              cursor: pointer;
-              margin-left: 20px;
-              margin-top: -2px;
-              z-index: 9999;
-            "
-            matTooltip="Open panel"
-            (click)="toggleSidePanel()"
-            >left_panel_open</span
-          >
-        }
+        <div class="toolbar-left">
+          <button mat-icon-button matTooltip="Toggle left panel" (click)="toggleSidePanel()">
+            <mat-icon>{{ showSidePanel ? 'left_panel_close' : 'left_panel_open' }}</mat-icon>
+          </button>
+          <mat-button-toggle-group [value]="mainTab" (change)="selectMainTab($event.value)" appearance="legacy" class="inline-toggle">
+            <mat-button-toggle value="chat">
+              <mat-icon>chat</mat-icon>
+              Chat
+            </mat-button-toggle>
+            <mat-button-toggle value="features">
+              <mat-icon>dashboard</mat-icon>
+              Features
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
         @if (evalCase) {
           <div style="display: flex">
             <div class="toolbar-session-text">Eval Case ID</div>
@@ -227,51 +148,17 @@
             }
           </div>
         } @else {
-          <div style="display: flex">
+          <div style="display: flex; align-items: center; gap: 12px;">
             <div class="toolbar-session-text">Conversation ID</div>
             <div class="toolbar-session-id">{{ sessionId }}</div>
           </div>
-          <div class="toolbar-actions">
-            <button mat-stroked-button color="primary" class="new-session-button" (click)="onNewSessionClick()">
-              <mat-icon>add</mat-icon>
-              New Session
-            </button>
-            <div class="toolbar-sse-toggle">
-              <mat-slide-toggle
-                class="example-margin"
-                [checked]="useSse"
-                (change)="toggleSse()"
-              >
-                Token Streaming
-              </mat-slide-toggle>
-            </div>
-            <mat-divider
-              [vertical]="true"
-              style="margin-left: 8px; margin-right: 8px; height: 22px"
-            ></mat-divider>
-            <button mat-icon-button [matMenuTriggerFor]="sessionMenu" aria-label="Session actions" class="toolbar-icon" matTooltip="More actions">
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #sessionMenu="matMenu">
-              <button mat-menu-item (click)="deleteSession(sessionId)">
-                <mat-icon>delete</mat-icon>
-                <span>Delete session</span>
-              </button>
-              <button mat-menu-item (click)="exportSession()">
-                <mat-icon>download</mat-icon>
-                <span>Export session</span>
-              </button>
-              <button mat-menu-item *ngIf="(importSessionEnabledObs | async)" (click)="importSession()">
-                <mat-icon>upload</mat-icon>
-                <span>Import session</span>
-              </button>
-            </mat-menu>
-          </div>
+          <div class="toolbar-actions"></div>
         }
       </div>
     }
+    @if (mainTab === 'chat') {
     <mat-card class="chat-card">
-      @if (usageGate.isLimited()) {
+      @if (usageGate.isLimited() && !usageGateDismissed) {
         <app-upgrade-cta (close)="usageGateDismissed = true" />
       }
       @if (appName === "") {
@@ -633,6 +520,9 @@
         [(userInput)]="userInput"
         [isAudioRecording]="isAudioRecording"
         [isVideoRecording]="isVideoRecording"
+        (newSession)="onNewSessionClick()"
+        (deleteSession)="deleteSession(sessionId)"
+        (exportSession)="exportSession()"
         (fileSelect)="onFileSelect($event)"
         (removeFile)="removeFile($event)"
         (removeStateUpdate)="removeStateUpdate()"
@@ -642,8 +532,9 @@
         (updateState)="updateState()"
       ></app-chat-composer>
     </mat-card>
+    }
 
-    @if (bottomPanelVisible) {
+    @if (bottomPanelVisible && mainTab === 'chat') {
       <div #bottomPanel class="trace-detail-container" appResizableBottomPanel>
         <div class="bottom-resize-handler"></div>
         <app-trace-event
@@ -653,6 +544,28 @@
           (panelClosed)="closeTraceEventDetailPanel()"
         ></app-trace-event>
       </div>
+    }
+    @if (mainTab === 'features') {
+      <app-feature-dock
+        [fullscreen]="true"
+        [selectedTab]="dockTab"
+        [traceData]="traceData"
+        [eventsMap]="eventData"
+        [sessionState]="currentSessionState"
+        [appName]="appName"
+        [userId]="userId"
+        [sessionId]="sessionId"
+        [artifacts]="artifacts"
+        (selectTab)="selectDockTab($event)"
+        (selectedEvent)="openEventDeepDive($event)"
+        (openTraceDeepDive)="openTraceDeepDive($event)"
+        (shouldShowTab)="handleShouldShowEvalTab($event)"
+        (sessionSelected)="updateWithSelectedSession($event)"
+        (evalCaseSelected)="updateWithSelectedEvalCase($event)"
+        (evalSetIdSelected)="updateSelectedEvalSetId($event)"
+        (shouldReturnToSession)="handleReturnToSession($event)"
+        (evalNotInstalledMsg)="handleEvalNotInstalled($event)"
+      ></app-feature-dock>
     }
     @if (isDeepDiveOpen) {
       <div class="deep-dive-overlay">

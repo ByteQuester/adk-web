@@ -20,7 +20,8 @@ import {FormsModule} from '@angular/forms';
 import {BrowserModule} from '@angular/platform-browser';
 import {AppRoutingModule} from './app-routing.module';
 
-import {HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import { AuthInterceptor } from './core/services/auth.interceptor';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -28,6 +29,7 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {AppComponent} from './app.component';
 import {ComponentModule} from './components/component.module';
@@ -43,6 +45,7 @@ import {VideoService, VIDEO_SERVICE} from './core/services/video.service';
 import {WebSocketService, WEBSOCKET_SERVICE} from './core/services/websocket.service';
 import { TraceService, TRACE_SERVICE } from './core/services/trace.service';
 import { AboutComponent } from './components/about/about.component';
+ 
 
 @NgModule({
   declarations: [AppComponent],
@@ -61,6 +64,7 @@ import { AboutComponent } from './components/about/about.component';
     MatIconModule,
     MatTooltipModule,
     MatMenuModule,
+    MatButtonToggleModule,
   ],
   providers: [
     {provide: SESSION_SERVICE, useClass: SessionService},
@@ -74,6 +78,8 @@ import { AboutComponent } from './components/about/about.component';
     {provide: DOWNLOAD_SERVICE, useClass: DownloadService},
     {provide: TRACE_SERVICE, useClass: TraceService},
     {provide: FEATURE_FLAG_SERVICE, useClass: FeatureFlagService},
+    // Attach Supabase auth token to API requests
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
   bootstrap: [AppComponent],
 })

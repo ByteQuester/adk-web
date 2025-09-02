@@ -38,6 +38,7 @@ import { ChatRecordingService } from './services/chat-recording.service';
 import { ChatSessionService } from './services/chat-session.service';
 import {ResizableDrawerDirective} from '../../directives/resizable-drawer.directive';
 import {getMediaTypeFromMimetype, MediaType, openBase64InNewTab} from '../artifact-tab/artifact-tab.component';
+import { SessionsDialogComponent } from '../session-tab/sessions-dialog/sessions-dialog.component';
 import { ChatStreamService } from './services/chat-stream.service';
 import { ChatStoreService } from './services/chat-store.service';
 import { ChatEvalService } from './services/chat-eval.service';
@@ -154,6 +155,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     }),
     switchMap(
       () => this.agentService.listApps().pipe(
+        map((apps) => (apps || []).filter(a => !['demo_html', 'deployment', 'eval', 'tests'].includes(a))),
         catchError((err: HttpErrorResponse) => {
           this.loadingError.set(err.message);
           return of(undefined);
@@ -164,10 +166,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     tap((app) => {
       this.isLoadingApps.set(false);
       this.selectedAppControl.enable();
-      if (app?.length == 1) {
+      const apps = app ?? [];
+      const alreadySelected = this.activatedRoute.snapshot.queryParams['app'];
+      if (!alreadySelected && apps.length >= 1) {
         this.router.navigate([], {
           relativeTo: this.route,
-          queryParams: { app: app[0] },
+          queryParams: { app: apps[0] },
         });
       }
     }),
@@ -193,7 +197,9 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   bottomPanelVisible = false;
   hoveredEventMessageIndices: number[] = [];
   // Vertical sidebar tab selection
-  selectedSideTab: string = 'trace';
+  selectedSideTab: string = 'sessions';
+  mainTab: 'chat'|'features' = 'chat';
+  dockTab: 'trace'|'events'|'state'|'eval'|'artifacts' = 'trace';
   // Deep-dive overlay state
   isDeepDiveOpen = false;
   deepDiveMode: 'trace' | 'event' | null = null;
@@ -234,8 +240,36 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
         this.featureFlagService.isEditFunctionArgsEnabled();
     this.isSessionUrlEnabledObs = this.featureFlagService.isSessionUrlEnabled();
   }
+  formatAppDisplayName(name: string): string {
+    if (!name) return '';
+    return name
+      .split('_')
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+  openSessionsDialog() {
+    const ref = this.dialog.open(SessionsDialogComponent, {
+      width: '800px',
+      data: { userId: this.userId, appName: this.appName, sessionId: this.sessionId },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result?.selected) {
+        this.updateWithSelectedSession(result.selected);
+      } else if (result?.reloaded) {
+        this.updateSessionState(result.reloaded);
+      }
+    });
+  }
 
   ngOnInit(): void {
+    // Sync mainTab from query param set by App shell sub-toolbar
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
+      const tab = this.activatedRoute.snapshot.queryParams['mainTab'];
+      this.mainTab = tab === 'features' ? 'features' : 'chat';
+      if (this.mainTab === 'features') {
+        this.bottomPanelVisible = false;
+      }
+    }); 
     this.syncSelectedAppFromUrl();
     this.updateSelectedAppUrl();
 
@@ -328,10 +362,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   filterApps(apps: string[] | undefined): string[] {
-    const term = (this.agentFilterText || '').toLowerCase();
     if (!apps) return [];
-    if (!term) return apps;
-    return apps.filter(a => a.toLowerCase().includes(term));
+    const blacklist = ['demo_html', 'deployment', 'eval', 'tests'];
+    const filtered = apps.filter(a => !blacklist.includes(a));
+    const term = (this.agentFilterText || '').toLowerCase();
+    if (!term) return filtered;
+    return filtered.filter(a => a.toLowerCase().includes(term));
   }
 
   // Keyboard navigation for agent picker
@@ -370,10 +406,13 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   private pickActiveAgent() {
     const sub = this.apps$.subscribe(apps => {
       const list = this.filterApps(apps ?? []);
-      const candidate = list[this.activeAgentIndex];
-      if (candidate) {
-        this.selectAgentFromPicker(candidate);
+      if (list.length === 1) {
+        this.selectedAppControl.setValue(list[0]);
+        this.toggleAgentPicker();
+        return;
       }
+      const candidate = list[this.activeAgentIndex];
+      if (candidate) this.selectAgentFromPicker(candidate);
     });
     sub.unsubscribe();
   }
@@ -395,6 +434,9 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
         behavior: 'smooth',
       });
     });
+
+    // Listen for global toggle event to open/close the side panel from sub-toolbar
+    window.addEventListener('toggleChatSidePanel', () => this.toggleSidePanel());
   }
 
   selectApp(appName: string) {
@@ -804,6 +846,21 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       this.sideDrawer.open();
     }
     this.showSidePanel = !this.showSidePanel;
+  }
+
+  /**
+   * Main tab is now controlled by a query param via AppComponent sub-toolbar.
+   * This method is no longer used.
+   */
+  selectMainTab(tab: 'chat'|'features') {
+    this.mainTab = tab;
+    if (tab === 'features') {
+      this.bottomPanelVisible = false;
+    }
+  }
+
+  selectDockTab(tab: 'trace'|'events'|'state'|'eval'|'artifacts') {
+    this.dockTab = tab;
   }
 
   selectSideTab(tab: string) {

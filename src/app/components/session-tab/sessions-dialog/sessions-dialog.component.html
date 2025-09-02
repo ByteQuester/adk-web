@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Sessions</h2>
+<mat-dialog-content>
+  <app-session-tab
+    [userId]="data.userId"
+    [appName]="data.appName"
+    [sessionId]="data.sessionId"
+    (sessionSelected)="onSelected($event)"
+    (sessionReloaded)="onReloaded($event)"
+  ></app-session-tab>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>
+
+

@@ -23,6 +23,9 @@ export class ChatComposerComponent {
   @Output() toggleAudioRecording = new EventEmitter<void>();
   @Output() toggleVideoRecording = new EventEmitter<void>();
   @Output() updateState = new EventEmitter<void>();
+  @Output() newSession = new EventEmitter<void>();
+  @Output() deleteSession = new EventEmitter<void>();
+  @Output() exportSession = new EventEmitter<void>();
   
 }
 

@@ -1,4 +1,21 @@
 .cta-container {
+  padding: 12px 16px;
+  border: 1px dashed rgba(0,0,0,0.2);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.02);
+}
+
+.cta-actions {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.remaining {
+  color: rgba(0,0,0,0.6);
+}
+
+.cta-container {
   background: var(--surface-card);
   color: var(--text-primary);
   padding: 24px;

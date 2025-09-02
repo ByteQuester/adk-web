@@ -20,21 +20,21 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: color-mix(in oklab, #14161a 40%, transparent);
+  background: color-mix(in oklab, var(--surface-card) 65%, transparent);
   -webkit-backdrop-filter: saturate(140%) blur(8px);
   backdrop-filter: saturate(140%) blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
   transition: background 160ms ease, box-shadow 160ms ease;
 }
 
 .app-toolbar.modal-open {
-  background: #14161a;
+  background: var(--surface-card);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
 .app-toolbar.scrolled {
-  background: color-mix(in oklab, #14161a 78%, transparent);
+  background: color-mix(in oklab, var(--surface-card) 90%, transparent);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
 }
 
@@ -47,4 +47,18 @@
   height: 2px;
   background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
   opacity: 0.6;
+}
+
+/* Compact sticky sub-toolbar below the main app toolbar */
+.sub-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 8px;
+  background: color-mix(in oklab, var(--surface-card) 70%, transparent);
+  -webkit-backdrop-filter: saturate(140%) blur(6px);
+  backdrop-filter: saturate(140%) blur(6px);
+  border-bottom: 1px solid var(--border-subtle);
 }

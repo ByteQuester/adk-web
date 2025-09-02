@@ -1,0 +1,28 @@
+<div class="page">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Trial Sandbox</mat-card-title>
+      <mat-card-subtitle>Simulate trial usage and limits</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="stats">
+        <mat-chip-listbox>
+          <mat-chip>Count: {{ usage.count }}</mat-chip>
+          <mat-chip>Limit: {{ usage.limit }}</mat-chip>
+          <mat-chip>Remaining: {{ usage.remaining }}</mat-chip>
+          <mat-chip color="warn" [disabled]="!usage.isLimited()">Limited: {{ usage.isLimited() }}</mat-chip>
+        </mat-chip-listbox>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-stroked-button color="primary" (click)="inc()">+1 try</button>
+      <button mat-stroked-button (click)="reset()">Reset</button>
+      <button mat-stroked-button (click)="set0()">Set count 0</button>
+      <button mat-stroked-button (click)="set4()">Set count 4</button>
+      <button mat-stroked-button (click)="set5()">Set limit 5</button>
+      <button mat-stroked-button (click)="set2()">Set limit 2</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+

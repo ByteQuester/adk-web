@@ -17,7 +17,7 @@
 
 import {inject, Injectable, InjectionToken} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {Observable, of, pipe} from 'rxjs';
+import {Observable, of} from 'rxjs';
 import {map} from 'rxjs/operators';
 
 export const IMPORT_SESSION = 'import_session';

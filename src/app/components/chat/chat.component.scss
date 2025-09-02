@@ -893,6 +893,16 @@ button {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.chat-toolbar .toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-toolbar .inline-toggle {
+  margin-left: 4px;
+}
+
 .chat-toolbar.edit-mode {
   background: #44c2651a;
 }
