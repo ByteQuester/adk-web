@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
-import { DOWNLOAD_SERVICE, DownloadService } from '../../core/services/download.service';
-import { SESSION_SERVICE, SessionService } from '../../core/services/session.service';
-import { AgentRunRequest } from '../../core/models/AgentRunRequest';
+import { DOWNLOAD_SERVICE, DownloadService } from '../../../core/services/download.service';
+import { SESSION_SERVICE, SessionService } from '../../../core/services/session.service';
+import { AgentRunRequest } from '../../../core/models/AgentRunRequest';
 
 @Injectable({ providedIn: 'root' })
 export class ChatSessionService {

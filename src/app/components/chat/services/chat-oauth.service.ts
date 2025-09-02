@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
-import { AgentRunRequest } from '../../core/models/AgentRunRequest';
-import { AgentService, AGENT_SERVICE } from '../../core/services/agent.service';
+import { AgentRunRequest } from '../../../core/models/AgentRunRequest';
+import { AgentService, AGENT_SERVICE } from '../../../core/services/agent.service';
 import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })

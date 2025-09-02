@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
-import { ArtifactService, ARTIFACT_SERVICE } from '../../core/services/artifact.service';
-import { formatBase64Data } from './chat.utils';
+import { ArtifactService, ARTIFACT_SERVICE } from '../../../core/services/artifact.service';
+import { formatBase64Data } from '../core/chat.utils';
 import { Observable, map } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })

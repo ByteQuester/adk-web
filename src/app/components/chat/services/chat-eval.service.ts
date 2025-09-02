@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
-import { EVAL_SERVICE, EvalService } from '../../core/services/eval.service';
-import { EvalCase } from '../eval-tab/eval-tab.component';
+import { EVAL_SERVICE, EvalService } from '../../../core/services/eval.service';
+import { EvalCase } from '../../eval-tab/eval-tab.component';
 
 @Injectable({ providedIn: 'root' })
 export class ChatEvalService {

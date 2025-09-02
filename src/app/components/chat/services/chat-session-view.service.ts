@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Session } from '../../core/models/Session';
+import { Session } from '../../../core/models/Session';
 
 @Injectable({ providedIn: 'root' })
 export class ChatSessionViewService {

@@ -81,6 +81,8 @@ html[data-theme="dark"] {
   --surface-card: #1b1b1b;
   --text-primary: #ffffff;
   --text-secondary: #9aa0a6;
+  --text-accent: #8AB4F8;
+  --surface-accent: rgba(138, 180, 248, 0.25);
   --bubble-user: #303030;
   --bubble-bot: #272727;
 }
@@ -90,6 +92,8 @@ html[data-theme="light"] {
   --surface-card: #ffffff;
   --text-primary: #202124;
   --text-secondary: #5f6368;
+  --text-accent: #305f9d;
+  --surface-accent: rgba(48, 95, 157, 0.25);
   --bubble-user: #e9eef6;
   --bubble-bot: #f1f3f4;
 }

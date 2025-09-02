@@ -420,7 +420,7 @@ button {
 }
 
 .empty-state-container {
-  color: #eee;
+  color: var(--text-primary);
   height: 100%;
   display: flex;
   flex-direction: column;

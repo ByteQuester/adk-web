@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
-import { AUDIO_SERVICE, AudioService } from '../../core/services/audio.service';
-import { WEBSOCKET_SERVICE, WebSocketService } from '../../core/services/websocket.service';
-import { VIDEO_SERVICE, VideoService } from '../../core/services/video.service';
-import { URLUtil } from '../../../utils/url-util';
+import { AUDIO_SERVICE, AudioService } from '../../../core/services/audio.service';
+import { WEBSOCKET_SERVICE, WebSocketService } from '../../../core/services/websocket.service';
+import { VIDEO_SERVICE, VideoService } from '../../../core/services/video.service';
+import { URLUtil } from '../../../../utils/url-util';
 
 @Injectable({ providedIn: 'root' })
 export class ChatRecordingService {

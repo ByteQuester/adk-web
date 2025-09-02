@@ -1,5 +1,5 @@
 import { Injectable, WritableSignal, signal } from '@angular/core';
-import { ChatMessage } from './chat.models';
+import { ChatMessage } from '../core/chat.models';
 
 @Injectable({ providedIn: 'root' })
 export class ChatStoreService {

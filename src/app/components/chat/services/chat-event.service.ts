@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { EVENT_SERVICE, EventService } from '../../core/services/event.service';
+import { EVENT_SERVICE, EventService } from '../../../core/services/event.service';
 import { Observable, combineLatest, from, map, of, switchMap } from 'rxjs';
 import { instance } from '@viz-js/viz';
 
@@ -47,7 +47,7 @@ export class ChatEventService {
     }
 
     const trace$ = this.eventService.getEventTrace(eventId).pipe(
-      map((res) => ({
+      map((res: any) => ({
         llmRequest: JSON.parse(res[llmRequestKey]),
         llmResponse: JSON.parse(res[llmResponseKey]),
       })),
@@ -56,7 +56,7 @@ export class ChatEventService {
     const graph$ = this.eventService
       .getEvent(userId, appName, sessionId, eventId)
       .pipe(
-        switchMap(async (res) => {
+        switchMap(async (res: any) => {
           if (!res.dotSrc) {
             return { renderedEventGraph: undefined, rawSvgString: undefined };
           }
@@ -70,7 +70,7 @@ export class ChatEventService {
       );
 
     return combineLatest([trace$, graph$]).pipe(
-      map(([t, g]) => ({ llmRequest: t.llmRequest, llmResponse: t.llmResponse, ...g })),
+      map(([t, g]: [any, any]) => ({ llmRequest: t.llmRequest, llmResponse: t.llmResponse, ...g })),
     );
   }
 }

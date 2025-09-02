@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@angular/core';
-import { createDefaultArtifactName, formatBase64Data, processThoughtText } from './chat.utils';
-import { getMediaTypeFromMimetype } from '../artifact-tab/artifact-tab.component';
+import { createDefaultArtifactName, formatBase64Data, processThoughtText } from '../core/chat.utils';
+import { getMediaTypeFromMimetype } from '../../artifact-tab/artifact-tab.component';
 import { ChatArtifactService } from './chat-artifact.service';
 import { ChatOauthService } from './chat-oauth.service';
-import { AgentRunRequest } from '../../core/models/AgentRunRequest';
-import { AGENT_SERVICE, AgentService } from '../../core/services/agent.service';
+import { AgentRunRequest } from '../../../core/models/AgentRunRequest';
+import { AGENT_SERVICE, AgentService } from '../../../core/services/agent.service';
 import { catchError, of } from 'rxjs';
 import { ChatStoreService } from './chat-store.service';
 
