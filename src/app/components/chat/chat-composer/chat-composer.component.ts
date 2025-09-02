@@ -23,6 +23,7 @@ export class ChatComposerComponent {
   @Output() toggleAudioRecording = new EventEmitter<void>();
   @Output() toggleVideoRecording = new EventEmitter<void>();
   @Output() updateState = new EventEmitter<void>();
+  
 }
 
 

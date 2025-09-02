@@ -51,7 +51,7 @@
         style="caret-color: white"
       ></textarea>
       <div class="chat-input-actions">
-        <div>
+        <div class="composer-left">
           <button mat-icon-button (click)="fileInput.click()" class="function-event-button" matTooltip="Upload local file">
             <mat-icon>attach_file</mat-icon>
           </button>
@@ -61,8 +61,9 @@
           <mat-menu #moreMenu="matMenu">
             <span mat-menu-item (click)="updateState.emit()">Update state</span>
           </mat-menu>
+          
         </div>
-        <div>
+        <div class="composer-right">
           <button mat-icon-button matSuffix type="button" (click)="sendMessage.emit($event)"
             class="function-event-button" matTooltip="Send message">
             <mat-icon>send</mat-icon>

@@ -36,6 +36,8 @@ export class SessionTabComponent implements OnInit {
   @Output() readonly sessionReloaded = new EventEmitter<Session>();
 
   sessionList: any[] = [];
+  private sessionTitleCache: Record<string, string> = {};
+  private sessionTitlePending = new Set<string>();
 
   private refreshSessionsSubject = new Subject<void>();
 
@@ -56,6 +58,10 @@ export class SessionTabComponent implements OnInit {
                   Number(b.lastUpdateTime) - Number(a.lastUpdateTime),
           );
           this.sessionList = res;
+          // Try to hydrate titles from localStorage, compute when missing
+          for (const s of this.sessionList) {
+            this.hydrateTitleFromStorage(s);
+          }
         });
   }
 
@@ -81,6 +87,7 @@ export class SessionTabComponent implements OnInit {
 
     return date.toLocaleString();
   }
+
 
   private fromApiResultToSession(res: any): Session {
     return {
@@ -112,5 +119,85 @@ export class SessionTabComponent implements OnInit {
       }
       return this.sessionList[index + 1];
     }
+  }
+
+  protected getSessionTitle(session: any): string | undefined {
+    const key = this.titleCacheKey(session);
+    if (this.sessionTitleCache[key]) {
+      return this.sessionTitleCache[key];
+    }
+    // Try storage once
+    const stored = this.readTitleFromStorage(key);
+    if (stored) {
+      this.sessionTitleCache[key] = stored;
+      return stored;
+    }
+    // Fetch asynchronously if not already
+    if (!this.sessionTitlePending.has(key)) {
+      this.sessionTitlePending.add(key);
+      this.sessionService
+          .getSession(this.userId, this.appName, session.id)
+          .subscribe((res) => {
+            const title = this.computeTitleFromSession(res);
+            if (title) {
+              this.sessionTitleCache[key] = title;
+              this.writeTitleToStorage(key, title);
+            }
+            this.sessionTitlePending.delete(key);
+          }, () => {
+            this.sessionTitlePending.delete(key);
+          });
+    }
+    return undefined;
+  }
+
+  private computeTitleFromSession(res: any): string | undefined {
+    try {
+      const events = res?.events ?? [];
+      for (const e of events) {
+        if (e?.author === 'user') {
+          const parts = e?.content?.parts ?? [];
+          for (const p of parts) {
+            const text = (p?.text || '').toString();
+            if (text && text.trim()) {
+              const clean = text.replace(/\s+/g, ' ').trim();
+              return this.truncateWords(clean, 7);
+            }
+          }
+        }
+      }
+    } catch {}
+    return undefined;
+  }
+
+  private truncateWords(text: string, maxWords: number): string {
+    const words = text.split(' ');
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '…';
+  }
+
+  private titleCacheKey(session: any): string {
+    return `adk.session.title.${this.appName}.${session.id}.${session.lastUpdateTime}`;
+  }
+
+  private hydrateTitleFromStorage(session: any) {
+    const key = this.titleCacheKey(session);
+    const stored = this.readTitleFromStorage(key);
+    if (stored) {
+      this.sessionTitleCache[key] = stored;
+    }
+  }
+
+  private readTitleFromStorage(key: string): string | undefined {
+    try {
+      const v = localStorage.getItem(key);
+      return v || undefined;
+    } catch { return undefined; }
+  }
+
+  private writeTitleToStorage(key: string, value: string) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {}
   }
 }

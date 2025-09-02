@@ -16,9 +16,6 @@
  */
 
 import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
-import {MatDialog} from '@angular/material/dialog';
-
-import {TraceChartComponent} from './trace-chart/trace-chart.component';
 
 @Component({
   selector: 'app-event-tab',
@@ -29,6 +26,7 @@ import {TraceChartComponent} from './trace-chart/trace-chart.component';
 export class EventTabComponent implements OnChanges {
   @Input() eventsMap = new Map<string, any>();
   @Output() selectedEvent = new EventEmitter<string>();
+  @Output() openTraceDeepDive = new EventEmitter<{ traceId: string, invocId: string }>();
   @Input() traceData: any[] = [];
   llmRequest: any = undefined;
   llmResponse: any = undefined;
@@ -37,8 +35,8 @@ export class EventTabComponent implements OnChanges {
   isDetailsPanelOpen = false;
   view = 'events';
   invocTraces = new Map<string, any[]>();
-
-  constructor(private dialog: MatDialog) {}
+  invocToUserMsg = new Map<string, string>();
+  constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if ('traceData' in changes) {
@@ -77,6 +75,16 @@ export class EventTabComponent implements OnChanges {
       }
       return map;
     }, new Map<string, any[]>());
+
+    // Build invocation title mapping similar to TraceTabComponent
+    this.invocToUserMsg.clear();
+    for (const [key, value] of this.invocTraces) {
+      this.invocToUserMsg.set(key, this.findUserMsgFromInvocGroup(value));
+    }
+  }
+
+  onViewToggle(mode: 'events' | 'trace') {
+    this.view = mode;
   }
 
   findInvocIdFromTraceId(traceId: string) {
@@ -88,14 +96,14 @@ export class EventTabComponent implements OnChanges {
         .attributes['gcp.vertex.agent.invocation_id']
   }
 
-  openDialog(traceId: string): void {
-    const dialogRef = this.dialog.open(TraceChartComponent, {
-      width: 'auto',
-      maxWidth: '90vw',
-      data: {
-        spans: this.invocTraces.get(traceId),
-        invocId: this.findInvocIdFromTraceId(traceId)
-      },
-    });
+  findUserMsgFromInvocGroup(group: any[]) {
+    const eventItem = group?.find(
+        item => item.attributes !== undefined &&
+            'gcp.vertex.agent.invocation_id' in item.attributes)
+    const requestJson =
+        JSON.parse(eventItem.attributes['gcp.vertex.agent.llm_request'])
+    const userContent =
+        requestJson.contents.filter((c: any) => c.role == 'user').at(-1)
+    return userContent?.parts?.[0]?.text ?? '[attachment]';
   }
 }

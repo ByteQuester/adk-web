@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input, OnChanges, OnInit, SimpleChange, SimpleChanges} from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
+import { Inject } from '@angular/core';
+import { TRACE_SERVICE, TraceService } from '../../core/services/trace.service';
 @Component({
   selector: 'app-trace-tab',
   templateUrl: './trace-tab.component.html',
@@ -24,10 +26,11 @@ import {Component, Input, OnChanges, OnInit, SimpleChange, SimpleChanges} from '
 
 export class TraceTabComponent implements OnInit, OnChanges {
   @Input() traceData: any = [];
+  @Output() openTraceDeepDive = new EventEmitter<{ traceId: string, invocId: string }>();
   invocTraces = new Map<string, any[]>();
   invocToUserMsg = new Map<string, string>();
 
-  constructor() {}
+  constructor(@Inject(TRACE_SERVICE) public traceService: TraceService) {}
 
   ngOnInit(): void {}
 

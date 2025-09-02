@@ -1,6 +1,8 @@
 .chat-input { width: 100%; }
 .input-field { width: 100%; }
 .chat-input-actions { display: flex; justify-content: space-between; }
+.composer-left, .composer-right { display: inline-flex; align-items: center; gap: 6px; }
+
 .image-preview { max-height: 100px; border-radius: 8px; }
 .image-container, .file-container { position: relative; margin: 4px 0; }
 .delete-button { position: absolute; top: -8px; right: -8px; }

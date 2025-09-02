@@ -17,8 +17,8 @@
 @use '@angular/material' as mat;
 
 .events-wrapper {
-  padding-left: 25px;
-  padding-right: 25px;
+  padding-left: 12px;
+  padding-right: 12px;
   color: var(--text-secondary);
   font-size: 14px;
   font-weight: 700;
@@ -42,14 +42,20 @@
 }
 
 .events-container {
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 .event-container {
   display: flex;
-  flex-direction: row;
-  margin-top: 20px;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
 }
+
+/* Make tables and JSON viewers responsive inside the sidebar */
+.events-container table { width: 100% !important; }
+.events-container ngx-json-viewer { display: block; max-width: 100%; overflow: auto; }
+.events-container pre { white-space: pre-wrap; word-break: break-word; }
 
 .function-event-button {
   margin-top: 11px;

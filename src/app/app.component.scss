@@ -14,3 +14,37 @@
   gap: 8px;
   font-weight: 600;
 }
+
+/* Subtle glass/blur top bar with gradient keyline */
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in oklab, #14161a 40%, transparent);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  backdrop-filter: saturate(140%) blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 160ms ease, box-shadow 160ms ease;
+}
+
+.app-toolbar.modal-open {
+  background: #14161a;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.app-toolbar.scrolled {
+  background: color-mix(in oklab, #14161a 78%, transparent);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.app-toolbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  opacity: 0.6;
+}

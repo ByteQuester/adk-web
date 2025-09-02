@@ -1,3 +1,46 @@
+@use '@angular/material' as mat;
+
+.confirm-delete-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+h2[mat-dialog-title] {
+  margin: 0;
+  font-weight: 600;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(234, 67, 53, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff8a80;
+}
+
+mat-dialog-content p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+mat-dialog-actions {
+  padding-top: 8px;
+}
+
+/* Emphasize the destructive action */
+::ng-deep .mat-mdc-dialog-container .mat-mdc-button-base + .mat-mdc-button-base {
+  margin-left: 8px;
+}
 /**
  * Copyright 2025 Google LLC
  *

@@ -25,13 +25,13 @@
           <p>Trace</p>
         }
         @if (traceData) {
-          <mat-button-toggle-group name="fontStyle" aria-label="Font Style" style="scale: 0.8" [(ngModel)]="view">
+          <mat-button-toggle-group name="view" aria-label="View" style="scale: 0.8" [value]="view" (change)="onViewToggle($event.value)">
             <mat-button-toggle value="events">Events</mat-button-toggle>
             <mat-button-toggle value="trace">Trace</mat-button-toggle>
           </mat-button-toggle-group>
         }
       </div>
-      @if (!isTraceView()) {
+      @if (view === 'events') {
         <mat-list class="event-list">
           @for (jsonData of eventsMap | keyvalue: mapOrderPreservingSort; track jsonData; let i = $index) {
             <mat-list-item (click)="selectEvent(jsonData.key)">
@@ -41,15 +41,22 @@
           }
         </mat-list>
       }
-      @if (isTraceView()) {
-        <mat-list class="event-list">
+      @if (view === 'trace') {
+        <div class="trace-list-wrapper">
           @for (invoc of invocTraces | keyvalue: mapOrderPreservingSort; track invoc; let i = $index) {
-            <mat-list-item (click)="openDialog(invoc.key)">
-              <span class="event-index">{{i}}</span>
-              <span>Invocation {{findInvocIdFromTraceId(invoc.key)}}</span>
-            </mat-list-item>
+          <div class="trace-item">
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title> {{invocToUserMsg.get(invoc.key)}} </mat-panel-title>
+              </mat-expansion-panel-header>
+              <app-trace-tree
+                [spans]="invoc.value"
+                [invocationId]="findInvocIdFromTraceId(invoc.key)"
+              ></app-trace-tree>
+            </mat-expansion-panel>
+          </div>
           }
-        </mat-list>
+        </div>
       }
     </div>
   }

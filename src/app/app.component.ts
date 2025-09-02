@@ -16,6 +16,7 @@
  */
 
 import {Component, computed, inject} from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { ThemeService } from './core/services/theme.service';
 
 @Component({
@@ -26,9 +27,27 @@ import { ThemeService } from './core/services/theme.service';
 })
 export class AppComponent {
   private readonly theme = inject(ThemeService);
+  private readonly dialog = inject(MatDialog);
   isDark = computed(() => this.theme.isDark());
+  scrolled = false;
+  isAnyDialogOpen = false;
 
   toggleTheme() {
     this.theme.toggle();
+  }
+
+  onContentScroll(event: Event) {
+    const target = event.target as HTMLElement | null;
+    const offset = target ? target.scrollTop : window.scrollY;
+    this.scrolled = offset > 4;
+  }
+
+  constructor() {
+    this.dialog.afterOpened.subscribe(() => this.isAnyDialogOpen = true);
+    this.dialog.afterAllClosed.subscribe(() => this.isAnyDialogOpen = false);
+    // Also listen for overlay open/close events for menus via capturing clicks
+    document.addEventListener('click', () => {
+      // no-op; menu close will restore toolbar blur automatically
+    });
   }
 }

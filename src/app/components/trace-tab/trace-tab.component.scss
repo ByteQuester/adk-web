@@ -18,7 +18,7 @@
 
 .trace-container {
   width: 100%;
-  white-space: nowrap;
+  white-space: normal;
   font-size: 12px;
 }
 
@@ -32,7 +32,7 @@
 }
 
 .trace-label {
-  width: 400px;
+  max-width: 100%;
   color: var(--text-primary);
   text-overflow: ellipsis;
   font-family: 'Google Sans Mono', monospace;
@@ -44,7 +44,7 @@
 }
 
 .trace-bar-container {
-  width: 50vw;
+  width: 100%;
   position: relative;
   height: 16px;
 }

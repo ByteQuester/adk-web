@@ -174,6 +174,12 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     shareReplay(),
   );
 
+  // Inline agent picker state
+  isAgentPickerOpen = false; // legacy dropdown state
+  agentFilterText: string = '';
+  activeAgentIndex: number = 0;
+  isAgentPanelOpen = false;
+
   // Import session
   importSessionEnabledObs: Observable<boolean>;
 
@@ -186,6 +192,13 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   // Trace detail
   bottomPanelVisible = false;
   hoveredEventMessageIndices: number[] = [];
+  // Vertical sidebar tab selection
+  selectedSideTab: string = 'trace';
+  // Deep-dive overlay state
+  isDeepDiveOpen = false;
+  deepDiveMode: 'trace' | 'event' | null = null;
+  deepDiveTraceId: string | null = null;
+  deepDiveInvocId: string | null = null;
 
   constructor(
       private sanitizer: DomSanitizer,
@@ -294,6 +307,87 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sideDrawer.open();
   }
 
+  // Custom inline agent picker helpers
+  toggleAgentPicker() {
+    this.isAgentPickerOpen = !this.isAgentPickerOpen;
+    if (this.isAgentPickerOpen) {
+      this.activeAgentIndex = 0;
+    }
+  }
+
+  toggleAgentPanel() {
+    this.isAgentPanelOpen = !this.isAgentPanelOpen;
+    if (this.isAgentPanelOpen) {
+      this.activeAgentIndex = 0;
+    }
+  }
+
+  selectAgentFromPicker(appName: string) {
+    this.selectedAppControl.setValue(appName);
+    this.toggleAgentPicker();
+  }
+
+  filterApps(apps: string[] | undefined): string[] {
+    const term = (this.agentFilterText || '').toLowerCase();
+    if (!apps) return [];
+    if (!term) return apps;
+    return apps.filter(a => a.toLowerCase().includes(term));
+  }
+
+  // Keyboard navigation for agent picker
+  onAgentFilterKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.activeAgentIndex += 1;
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.activeAgentIndex -= 1;
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.pickActiveAgent();
+    } else if (event.key === 'Escape') {
+      this.isAgentPickerOpen = false;
+    }
+    this.clampActiveIndex();
+  }
+
+  onAgentListKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === 'Escape') {
+      this.onAgentFilterKeydown(event);
+    }
+  }
+
+  private clampActiveIndex() {
+    const sub = this.apps$.subscribe(apps => {
+      const list = this.filterApps(apps ?? []);
+      if (list.length === 0) { this.activeAgentIndex = 0; return; }
+      if (this.activeAgentIndex < 0) this.activeAgentIndex = list.length - 1;
+      if (this.activeAgentIndex >= list.length) this.activeAgentIndex = 0;
+    });
+    sub.unsubscribe();
+  }
+
+  private pickActiveAgent() {
+    const sub = this.apps$.subscribe(apps => {
+      const list = this.filterApps(apps ?? []);
+      const candidate = list[this.activeAgentIndex];
+      if (candidate) {
+        this.selectAgentFromPicker(candidate);
+      }
+    });
+    sub.unsubscribe();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    // Close when clicking outside the agent picker container
+    if (!target.closest('.agent-panel') && !target.closest('.agent-picker')) {
+      this.isAgentPickerOpen = false;
+      this.isAgentPanelOpen = false;
+    }
+  }
+
   scrollToBottom() {
     setTimeout(() => {
       this.scrollContainer.nativeElement.scrollTo({
@@ -378,7 +472,38 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.chatStreamService.processPart(this, chunkJson, part, index, this.useSse);
   }
 
-  
+  openTraceDeepDive(payload: { traceId: string, invocId: string }) {
+    this.deepDiveMode = 'trace';
+    this.deepDiveTraceId = payload.traceId;
+    this.deepDiveInvocId = payload.invocId;
+    // Try to find an eventId associated with this invocation to seed TraceEvent view
+    try {
+      const entries = Array.from(this.eventData.entries());
+      const match = entries.find(([id, e]: any[]) => e && e.invocationId === payload.invocId);
+      if (match) {
+        const eventId = match[0];
+        // Minimal span object with required attribute for TraceEvent component
+        this.traceService.selectedRow({ attributes: { 'gcp.vertex.agent.event_id': eventId } } as any);
+      }
+      this.traceService.setEventData(this.eventData);
+      this.traceService.setMessages(this.messages);
+    } catch {}
+    this.isDeepDiveOpen = true;
+  }
+
+  openEventDeepDive(eventId: string) {
+    this.deepDiveMode = 'event';
+    this.selectedEvent = this.eventData.get(eventId);
+    this.selectedEventIndex = this.chatEventService.getIndexOfKeyInMap(this.eventData, eventId);
+    this.isDeepDiveOpen = true;
+  }
+
+  closeDeepDive() {
+    this.isDeepDiveOpen = false;
+    this.deepDiveMode = null;
+    this.deepDiveTraceId = null;
+    this.deepDiveInvocId = null;
+  }
 
   private storeMessage(
       part: any, e: any, index: number, role: string, invocationIndex?: number,
@@ -680,6 +805,13 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.showSidePanel = !this.showSidePanel;
   }
+
+  selectSideTab(tab: string) {
+    this.selectedSideTab = tab;
+    this.handleTabChange(null);
+  }
+
+  
 
   protected handleTabChange(event: any) {
     if (!this.isChatMode()) {
@@ -1012,6 +1144,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.chatSessionService.importSessionFromFile(this);
   }
 
+  
   // Helper method to dynamically inject the style
   private injectCustomIconColorStyle(className: string, color: string): void {
     // Check if the style already exists to prevent duplicates

@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<mat-toolbar color="primary">
+<mat-toolbar color="primary" class="app-toolbar" [class.scrolled]="scrolled" [class.modal-open]="isAnyDialogOpen">
   <span class="brand">
     <img src="assets/ADK-512-color.svg" width="24" height="24" alt="ADK" />
     ADK Web
@@ -43,6 +43,6 @@
   <button mat-menu-item disabled>Sign up (soon)</button>
 </mat-menu>
 
-<div style="flex: 1; overflow: auto;">
+<div style="flex: 1; overflow: auto;" (scroll)="onContentScroll($event)" [class.scrolled]="scrolled">
   <router-outlet></router-outlet>
 </div>
