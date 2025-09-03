@@ -9,7 +9,7 @@
     "test": "ng test",
     "clean-config": "node clean-backend.js",
     "inject-backend": "node set-backend.js",
-    "serve": "npm run clean-config && npm run inject-backend -- --backend=$npm_config_backend --supabase_url=$npm_config_supabase_url --supabase_anon_key=$npm_config_supabase_anon_key && ng serve"
+    "serve": "npm run clean-config && npm run inject-backend -- --backend=$npm_config_backend && ng serve"
   },
   "private": true,
   "dependencies": {
@@ -23,7 +23,6 @@
     "@angular/platform-browser": "^19.1.0",
     "@angular/platform-browser-dynamic": "^19.1.0",
     "@angular/router": "^19.1.0",
-    "@supabase/supabase-js": "^2.57.0",
     "@viz-js/viz": "^3.12.0",
     "ngx-json-viewer": "^3.2.1",
     "ngx-markdown": "^19.1.1",

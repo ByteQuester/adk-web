@@ -97,70 +97,10 @@
     <div class="resize-handler"></div>
   </mat-drawer>
   <div class="chat-container">
-    @if (appName != "" && mainTab === 'chat') {
-      <div class="chat-toolbar" [ngClass]="{'edit-mode': isEvalEditMode()}">
-        <div class="toolbar-left">
-          <button mat-icon-button matTooltip="Toggle left panel" (click)="toggleSidePanel()">
-            <mat-icon>{{ showSidePanel ? 'left_panel_close' : 'left_panel_open' }}</mat-icon>
-          </button>
-          <mat-button-toggle-group [value]="mainTab" (change)="selectMainTab($event.value)" appearance="legacy" class="inline-toggle">
-            <mat-button-toggle value="chat">
-              <mat-icon>chat</mat-icon>
-              Chat
-            </mat-button-toggle>
-            <mat-button-toggle value="features">
-              <mat-icon>dashboard</mat-icon>
-              Features
-            </mat-button-toggle>
-          </mat-button-toggle-group>
-        </div>
-        @if (evalCase) {
-          <div style="display: flex">
-            <div class="toolbar-session-text">Eval Case ID</div>
-            <div class="toolbar-session-id">{{ evalCase.evalId }}</div>
-          </div>
-          <div class="toolbar-actions">
-            @if (this.isEvalEditMode()) {
-              <button mat-button (click)="cancelEditEvalCase()" style="height: 30px">Cancel</button>
-              <button
-                mat-flat-button
-                (click)="saveEvalCase()"
-                style="height: 30px"
-                [disabled]="!hasEvalCaseChanged() || isEvalCaseEditing()"
-              >
-                Save
-              </button>
-            } @else {
-              <span
-                class="material-symbols-outlined toolbar-icon"
-                matTooltip="Edit current eval case"
-                (click)="editEvalCase()"
-              >
-                edit
-              </span>
-              <span
-                class="material-symbols-outlined toolbar-icon"
-                matTooltip="Delete current eval case"
-                (click)="deleteEvalCase()"
-              >
-                delete
-              </span>
-            }
-          </div>
-        } @else {
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="toolbar-session-text">Conversation ID</div>
-            <div class="toolbar-session-id">{{ sessionId }}</div>
-          </div>
-          <div class="toolbar-actions"></div>
-        }
-      </div>
-    }
+    
     @if (mainTab === 'chat') {
     <mat-card class="chat-card">
-      @if (usageGate.isLimited() && !usageGateDismissed) {
-        <app-upgrade-cta (close)="usageGateDismissed = true" />
-      }
+      
       @if (appName === "") {
         @if (isLoadingApps()) {
           <div class="empty-state-container">

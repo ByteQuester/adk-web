@@ -20,7 +20,6 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { ThemeService } from './core/services/theme.service';
-import { UsageGateService } from './components/saas/usage-gate.service';
 
 @Component({
   selector: 'app-root',
@@ -33,7 +32,6 @@ export class AppComponent {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
-  protected usage = inject(UsageGateService);
   isDark = computed(() => this.theme.isDark());
   scrolled = false;
   isAnyDialogOpen = false;
@@ -59,9 +57,7 @@ export class AppComponent {
     this.theme.toggle();
   }
 
-  resetTrial() {
-    try { this.usage.reset(); } catch {}
-  }
+  
 
   onContentScroll(event: Event) {
     const target = event.target as HTMLElement | null;

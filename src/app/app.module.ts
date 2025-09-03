@@ -20,8 +20,7 @@ import {FormsModule} from '@angular/forms';
 import {BrowserModule} from '@angular/platform-browser';
 import {AppRoutingModule} from './app-routing.module';
 
-import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
-import { AuthInterceptor } from './core/services/auth.interceptor';
+import {HttpClientModule} from '@angular/common/http';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -78,8 +77,6 @@ import { AboutComponent } from './components/about/about.component';
     {provide: DOWNLOAD_SERVICE, useClass: DownloadService},
     {provide: TRACE_SERVICE, useClass: TraceService},
     {provide: FEATURE_FLAG_SERVICE, useClass: FeatureFlagService},
-    // Attach Supabase auth token to API requests
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
   ],
   bootstrap: [AppComponent],
 })

@@ -70,7 +70,6 @@ import {TraceEventComponent} from './trace-tab/trace-event/trace-event.component
 import {TraceTabComponent} from './trace-tab/trace-tab.component';
 import {TraceTreeComponent} from './trace-tab/trace-tree/trace-tree.component';
 import {ViewImageDialogComponent} from './view-image-dialog/view-image-dialog.component';
-import { UpgradeCtaComponent } from './saas/upgrade-cta.component';
 import { FeatureDockComponent } from './feature-dock/feature-dock.component';
 import { SessionsDialogComponent } from './session-tab/sessions-dialog/sessions-dialog.component';
 // Reverted modular components imports
@@ -102,7 +101,6 @@ const COMPONENTS = [
   ChatMessageListComponent,
   FeatureDockComponent,
   SessionsDialogComponent,
-  
 ];
 
 @NgModule({
@@ -142,7 +140,6 @@ const COMPONENTS = [
     MatDialogModule,
     MatButtonToggleModule,
     MatMenuModule,
-    UpgradeCtaComponent,
   ],
 })
 export class ComponentModule {}

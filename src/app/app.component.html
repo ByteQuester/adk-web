@@ -14,40 +14,38 @@
  limitations under the License.
 -->
 <mat-toolbar color="primary" class="app-toolbar" [class.scrolled]="scrolled" [class.modal-open]="isAnyDialogOpen">
-  <span class="brand">
-    <img src="assets/ADK-512-color.svg" width="24" height="24" alt="ADK" />
-    ADK Web
-  </span>
-  <span class="spacer"></span>
-  <a mat-button routerLink="/chat">Chat</a>
-  <button mat-button [matMenuTriggerFor]="productsMenu">Products</button>
-  <a mat-button routerLink="/about">About</a>
-  <button mat-icon-button [matMenuTriggerFor]="accountMenu" aria-label="Account">
-    <mat-icon>account_circle</mat-icon>
-  </button>
-  <button mat-button (click)="resetTrial()" matTooltip="Reset trial for testing">
-    Trial: reset ({{ usage.count }}/{{ usage.limit }})
-  </button>
-  <button mat-icon-button aria-label="Toggle theme" (click)="toggleTheme()" matTooltip="Toggle light/dark">
-    <mat-icon>{{ (isDark() ? 'light_mode' : 'dark_mode') }}</mat-icon>
-  </button>
+  <mat-toolbar-row>
+    <span class="brand">
+      <img src="assets/ADK-512-color.svg" width="24" height="24" alt="ADK" />
+      ADK Web
+    </span>
+    <span class="spacer"></span>
+
+    <ng-container *ngIf="isChatRoute()">
+      <mat-button-toggle-group [value]="chatMainTab()" (change)="setChatMainTab($event.value)" appearance="standard" class="inline-toggle">
+        <mat-button-toggle value="chat">
+          <mat-icon>chat</mat-icon>
+          Chat
+        </mat-button-toggle>
+        <mat-button-toggle value="features">
+          <mat-icon>dashboard</mat-icon>
+          Features
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+      <button mat-icon-button matTooltip="Toggle left panel" (click)="onToggleLeftPanel()" style="margin-left: 8px;">
+        <mat-icon>left_panel_close</mat-icon>
+      </button>
+    </ng-container>
+
+    <button mat-icon-button aria-label="Toggle theme" (click)="toggleTheme()" matTooltip="Toggle light/dark" style="margin-left: 8px;">
+      <mat-icon>{{ (isDark() ? 'light_mode' : 'dark_mode') }}</mat-icon>
+    </button>
+  </mat-toolbar-row>
 </mat-toolbar>
 
-<mat-menu #productsMenu="matMenu">
-  <button mat-menu-item routerLink="/pricing">Pricing</button>
-  <button mat-menu-item disabled>Docs (soon)</button>
-  <button mat-menu-item disabled>Changelog (soon)</button>
-  <button mat-menu-item disabled>Roadmap (soon)</button>
-  <button mat-menu-item disabled>Support (soon)</button>
-</mat-menu>
+ 
 
-<mat-menu #accountMenu="matMenu">
-  <button mat-menu-item routerLink="/signin">Sign in</button>
-  <button mat-menu-item routerLink="/signup">Sign up</button>
-  <button mat-menu-item routerLink="/account">Account</button>
-  <button mat-menu-item routerLink="/billing">Billing</button>
-  <button mat-menu-item routerLink="/sandbox">Trial sandbox</button>
-</mat-menu>
+ 
 
 <div style="flex: 1; overflow: auto;" (scroll)="onContentScroll($event)" [class.scrolled]="scrolled">
   <router-outlet></router-outlet>

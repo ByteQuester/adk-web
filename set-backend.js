@@ -18,8 +18,6 @@ const fs = require('fs');
 const path = './src/assets/config/runtime-config.json';
 
 const backendUrl = process.env.npm_config_backend;
-const supabaseUrl = process.env.npm_config_supabase_url || '';
-const supabaseAnonKey = process.env.npm_config_supabase_anon_key || '';
 
 if (!backendUrl) {
     console.error('Missing --backend argument');
@@ -29,12 +27,8 @@ if (!backendUrl) {
 
 const config = {
     backendUrl,
-    supabaseUrl,
-    supabaseAnonKey,
 };
 
 fs.writeFileSync(path, JSON.stringify(config, null, 2));
 
 console.log(`Backend URL injected: ${backendUrl}`);
-if (supabaseUrl) console.log(`Supabase URL injected: ${supabaseUrl}`);
-if (supabaseAnonKey) console.log(`Supabase anon key injected: [set]`);
