@@ -15,25 +15,7 @@
 -->
 
 <mat-drawer-container class="drawer-container" autosize>
-  @if (!showSidePanel && appName === "") {
-    <span
-      class="material-symbols-outlined"
-      style="
-        position: absolute;
-        width: 24px;
-        height: 24px;
-        color: #c4c7c5;
-        cursor: pointer;
-        margin-left: 20px;
-        margin-top: 20px;
-        z-index: 9999;
-      "
-      matTooltip="Open panel"
-      (click)="toggleSidePanel()"
-      >left_panel_open</span
-    >
-  }
-  @if (!showSidePanel && mainTab === 'features') {
+  @if (!showSidePanel) {
     <span
       class="material-symbols-outlined"
       style="
@@ -245,6 +227,9 @@
                       <div>
                         <div [innerHTML]="renderGooglerSearch(message.renderedContent)"></div>
                       </div>
+                    }
+                    @if (message.pendingArtifact && message.toolName) {
+                      <div class="tool-indicator">Using {{ message.toolName }}…</div>
                     }
                   </div>
                   @if (message.executableCode) {

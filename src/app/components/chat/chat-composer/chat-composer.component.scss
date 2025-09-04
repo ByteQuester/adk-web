@@ -1,18 +1,16 @@
-.chat-input { width: 100%; }
+.chat-input { width: min(92%, 1100px); margin: 8px auto 20px; }
 .input-field { width: 100%; }
 .chat-input-actions { display: flex; justify-content: space-between; align-items: center; }
-.composer-left, .composer-right { display: inline-flex; align-items: center; gap: 6px; }
+.composer-left, .composer-right { display: inline-flex; align-items: center; gap: 8px; }
 
 /* Compact input field spacing */
-:host ::ng-deep .mat-mdc-form-field-infix {
+::host ::ng-deep .mat-mdc-form-field-infix {
   padding-top: 6px !important;
   padding-bottom: 6px !important;
+  min-height: 46px;
 }
 
-.chat-input-box {
-  font-size: 14px;
-  line-height: 18px;
-}
+.chat-input-box { font-size: 14px; line-height: 20px; color: var(--text-primary); background: transparent; }
 
 .new-session-button.compact {
   height: 28px;
@@ -25,9 +23,44 @@
 .delete-button { position: absolute; top: -8px; right: -8px; }
 
 /* Keep composer affixed visually smaller so toolbar doesn't force scroll */
-:host {
-  display: block;
+::host { display: block; }
+
+/* Apply pill, soft border, and subtle elevation to the input field */
+::host ::ng-deep .input-field .mat-mdc-text-field-wrapper {
+  border: 1px solid var(--border-subtle) !important;
+  background: var(--surface-card) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.08) !important;
 }
+
+/* Hide the default outline chrome for a clean pill look */
+::host ::ng-deep .mdc-notched-outline__leading,
+::host ::ng-deep .mdc-notched-outline__notch,
+::host ::ng-deep .mdc-notched-outline__trailing { border: none !important; }
+
+/* Make action icon buttons feel lighter and circular */
+::host ::ng-deep .function-event-button,
+::host ::ng-deep .toolbar-icon[mat-icon-button] {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 9999px !important;
+  box-shadow: var(--shadow-1) !important;
+}
+
+/* Primary filled circular send button */
+::host ::ng-deep .send-btn {
+  background: #6ea7ea !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+/* Compact the overall width slightly on very large screens */
+@media (min-width: 1600px) { .chat-input { width: 70%; } }
 
 
 

@@ -82,8 +82,10 @@
   overflow: hidden;
   flex: 1;
   min-height: 12%;
-  box-shadow: none;
+  box-shadow: var(--shadow-card);
   background-color: var(--surface-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-l);
 }
 
 .loading-bar {
@@ -131,14 +133,25 @@
 .message-card {
   padding: 10px 16px;
   margin: 8px 6px;
-  border-radius: 16px;
+  border-radius: var(--radius-m);
   max-width: 80%;
   font-size: 14px;
   font-weight: 400;
   position: relative;
   display: inline-block;
-  border: 1px solid rgba(138, 180, 248, 0.08);
+  border: 1px solid rgba(138, 180, 248, 0.12);
   animation: bubbleIn 180ms ease-out both;
+}
+
+.tool-indicator {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: color-mix(in oklab, var(--surface-card) 90%, transparent);
+  border: 1px dashed var(--border-subtle);
+  border-radius: 9999px;
+  display: inline-block;
+  padding: 4px 10px;
 }
 
 .function-event-button {
@@ -349,11 +362,12 @@
   color: var(--text-primary);
   border-radius: 0;
   animation: drawerSlide 220ms ease-out;
-  width: 420px;
-  min-width: 340px;
+  width: var(--side-drawer-width, 420px);
+  min-width: 320px;
   max-width: 640px;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* avoid inner bar next to resize handle */
 }
 
 .tabs-container {
@@ -400,9 +414,8 @@
 
 .side-content {
   min-height: 200px;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: calc(100% - 72px);
+  overflow: auto;
   padding: 8px 12px 12px 4px;
   border-left: 1px solid #444746;
 }

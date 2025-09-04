@@ -509,6 +509,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.deepDiveMode = 'trace';
     this.deepDiveTraceId = payload.traceId;
     this.deepDiveInvocId = payload.invocId;
+    // Auto-close side panel for fullscreen deep-dive
+    if (this.showSidePanel) { this.toggleSidePanel(); }
     // Try to find an eventId associated with this invocation to seed TraceEvent view
     try {
       const entries = Array.from(this.eventData.entries());
@@ -528,6 +530,8 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.deepDiveMode = 'event';
     this.selectedEvent = this.eventData.get(eventId);
     this.selectedEventIndex = this.chatEventService.getIndexOfKeyInMap(this.eventData, eventId);
+    // Auto-close side panel for fullscreen deep-dive
+    if (this.showSidePanel) { this.toggleSidePanel(); }
     this.isDeepDiveOpen = true;
   }
 

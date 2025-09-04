@@ -276,7 +276,7 @@ export class ChatStreamService {
     if (e?.actions && e.actions.artifactDelta) {
       for (const key in e.actions.artifactDelta) {
         if (e.actions.artifactDelta.hasOwnProperty(key)) {
-          this.renderArtifact(ctx, key, e.actions.artifactDelta[key]);
+          this.renderArtifact(ctx, key, e.actions.artifactDelta[key], e);
         }
       }
     }
@@ -343,8 +343,19 @@ export class ChatStreamService {
     }
   }
 
-  private renderArtifact(ctx: any, artifactId: string, versionId: string) {
-    const message = { role: 'bot', inlineData: { data: '', mimeType: 'image/png' } };
+  private renderArtifact(ctx: any, artifactId: string, versionId: string, sourceEvent?: any) {
+    // Try to infer the tool/function name from the event title or author
+    let toolName = '';
+    const title: string | undefined = sourceEvent?.title;
+    if (title && title.includes('functionCall:')) {
+      toolName = title.split('functionCall:')[1]?.split(':')[0] ?? '';
+    } else if (sourceEvent?.author && sourceEvent.author !== 'bot') {
+      toolName = sourceEvent.author;
+    }
+    if (!toolName) toolName = sourceEvent?.actions?.toolName || sourceEvent?.functionCall?.name || 'tool';
+
+    // Show a human-readable placeholder instead of an empty bubble while fetching
+    const message = { role: 'bot', text: `Using ${toolName}…`, pendingArtifact: true, toolName, pendingArtifactId: artifactId } as any;
     ctx.insertMessageBeforeLoadingMessage(message);
     const currentIndex = ctx.messages.length - 2;
 
@@ -354,7 +365,10 @@ export class ChatStreamService {
         const base64Data = data;
         const mediaType = getMediaTypeFromMimetype(mimeType);
         const inlineData = { name: createDefaultArtifactName(mimeType), data: base64Data, mimeType, mediaType };
-        ctx.messages[currentIndex] = { role: 'bot', inlineData };
+        // Replace only the matching pending placeholder to avoid duplicates
+        const pendingIndex = ctx.messages.findIndex((m: any) => m.pendingArtifact && m.pendingArtifactId === artifactId);
+        const replaceIndex = pendingIndex >= 0 ? pendingIndex : currentIndex;
+        ctx.messages[replaceIndex] = { role: 'bot', inlineData, toolName } as any;
         ctx.artifacts = [...ctx.artifacts, { id: artifactId, data: base64Data, mimeType, versionId, mediaType }];
       });
   }

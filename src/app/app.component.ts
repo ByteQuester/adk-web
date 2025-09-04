@@ -57,6 +57,14 @@ export class AppComponent {
     this.theme.toggle();
   }
 
+  onThemeToggleKeydown(event: KeyboardEvent) {
+    const code = event.key;
+    if (code === 'Enter' || code === ' ' || code === 'Spacebar') {
+      event.preventDefault();
+      this.toggleTheme();
+    }
+  }
+
   
 
   onContentScroll(event: Event) {
@@ -69,6 +77,20 @@ export class AppComponent {
     try {
       window.dispatchEvent(new Event('toggleChatSidePanel'));
     } catch {}
+  }
+
+  onSegmentedKeydown(event: KeyboardEvent) {
+    const current = this.chatMainTab();
+    if (event.key === 'ArrowLeft') {
+      this.setChatMainTab('chat');
+      event.preventDefault();
+    } else if (event.key === 'ArrowRight') {
+      this.setChatMainTab('features');
+      event.preventDefault();
+    } else if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+      this.setChatMainTab(current === 'chat' ? 'features' : 'chat');
+      event.preventDefault();
+    }
   }
 
   constructor() {

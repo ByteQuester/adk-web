@@ -22,24 +22,29 @@
     <span class="spacer"></span>
 
     <ng-container *ngIf="isChatRoute()">
-      <mat-button-toggle-group [value]="chatMainTab()" (change)="setChatMainTab($event.value)" appearance="standard" class="inline-toggle">
-        <mat-button-toggle value="chat">
+      <div class="segmented" role="tablist" aria-label="Main view" (keydown)="onSegmentedKeydown($event)">
+        <div class="highlight" [style.transform]="chatMainTab() === 'chat' ? 'translateX(0)' : 'translateX(100%)'"></div>
+        <button class="segment" role="tab" [attr.aria-selected]="chatMainTab() === 'chat'" (click)="setChatMainTab('chat')">
           <mat-icon>chat</mat-icon>
           Chat
-        </mat-button-toggle>
-        <mat-button-toggle value="features">
+        </button>
+        <button class="segment" role="tab" [attr.aria-selected]="chatMainTab() === 'features'" (click)="setChatMainTab('features')">
           <mat-icon>dashboard</mat-icon>
           Features
-        </mat-button-toggle>
-      </mat-button-toggle-group>
+        </button>
+      </div>
       <button mat-icon-button matTooltip="Toggle left panel" (click)="onToggleLeftPanel()" style="margin-left: 8px;">
         <mat-icon>left_panel_close</mat-icon>
       </button>
     </ng-container>
 
-    <button mat-icon-button aria-label="Toggle theme" (click)="toggleTheme()" matTooltip="Toggle light/dark" style="margin-left: 8px;">
-      <mat-icon>{{ (isDark() ? 'light_mode' : 'dark_mode') }}</mat-icon>
-    </button>
+    <div class="theme-toggle" [class.dark]="isDark()" role="switch" [attr.aria-checked]="isDark()" aria-label="Toggle theme" matTooltip="Toggle light/dark" tabindex="0" (click)="toggleTheme()" (keydown)="onThemeToggleKeydown($event)" style="margin-left: 8px;">
+      <mat-icon class="icon moon">dark_mode</mat-icon>
+      <div class="track">
+        <div class="thumb"></div>
+      </div>
+      <mat-icon class="icon sun">light_mode</mat-icon>
+    </div>
   </mat-toolbar-row>
 </mat-toolbar>
 

@@ -114,6 +114,7 @@
   @include mat.expansion-overrides(
     (
       container-background-color: var(--surface-card),
+      container-shape: var(--radius-m),
       header-focus-state-layer-color: red,
       header-description-color: var(--text-secondary),
       header-text-size: 15,

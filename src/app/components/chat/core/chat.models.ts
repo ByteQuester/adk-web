@@ -37,6 +37,10 @@ export interface ChatMessage {
   text?: string;
   thought?: boolean;
   renderedContent?: string;
+  // When an artifact is being fetched, we show a readable placeholder
+  pendingArtifact?: boolean;
+  toolName?: string;
+  pendingArtifactId?: string;
   inlineData?: {
     name?: string;
     data: string;
