@@ -19,11 +19,12 @@ import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import { AboutComponent } from './components/about/about.component';
 import { ChatComponent } from './components/chat/chat.component';
+import { AuthGuard } from './core/auth/auth.guard';
 // Removed saas/auth routes
 
 const routes: Routes = [
   { path: '', redirectTo: '/chat', pathMatch: 'full' },
-  { path: 'chat', component: ChatComponent },
+  { path: 'chat', component: ChatComponent, canActivate: [AuthGuard] },
   { path: 'about', component: AboutComponent },
   // Chat and about only
 ];

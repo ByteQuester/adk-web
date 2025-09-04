@@ -112,6 +112,8 @@
           </div>
         }
       }
+      <!-- Auth banner (optional): shows only when requireAuth and not authenticated -->
+      <div class="auth-banner" *ngIf="false"></div>
       @if (longRunningEvents.length > 0) {
         <button mat-fab color="primary" class="fab-button" (click)="openDialog()">
           <mat-icon>priority_high</mat-icon>

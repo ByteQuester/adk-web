@@ -20,7 +20,7 @@ import {FormsModule} from '@angular/forms';
 import {BrowserModule} from '@angular/platform-browser';
 import {AppRoutingModule} from './app-routing.module';
 
-import {HttpClientModule} from '@angular/common/http';
+import {HttpClientModule, HTTP_INTERCEPTORS} from '@angular/common/http';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -44,6 +44,7 @@ import {VideoService, VIDEO_SERVICE} from './core/services/video.service';
 import {WebSocketService, WEBSOCKET_SERVICE} from './core/services/websocket.service';
 import { TraceService, TRACE_SERVICE } from './core/services/trace.service';
 import { AboutComponent } from './components/about/about.component';
+import { AuthInterceptor } from './core/auth/auth.interceptor';
  
 
 @NgModule({
@@ -77,6 +78,7 @@ import { AboutComponent } from './components/about/about.component';
     {provide: DOWNLOAD_SERVICE, useClass: DownloadService},
     {provide: TRACE_SERVICE, useClass: TraceService},
     {provide: FEATURE_FLAG_SERVICE, useClass: FeatureFlagService},
+    {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true},
   ],
   bootstrap: [AppComponent],
 })
