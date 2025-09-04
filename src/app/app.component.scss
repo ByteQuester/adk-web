@@ -44,8 +44,16 @@
 
 .segmented-center {
   display: flex;
-  flex: 1 1 auto;
   justify-content: center;
+  width: calc(100% - var(--side-drawer-width, 420px));
+  margin-left: var(--side-drawer-width, 420px);
+}
+
+@media (max-width: 960px) {
+  .segmented-center {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 .segmented .highlight {

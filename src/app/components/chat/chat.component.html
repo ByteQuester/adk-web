@@ -118,6 +118,13 @@
         </button>
       }
       @if (appName != "") {
+        @if (messages.length === 0) {
+          <div class="empty-chat-placeholder">
+            <img src="assets/ADK-512-color.svg" width="64" height="64" alt="" />
+            <div class="title">Start a new conversation</div>
+            <div class="subtitle">Type a message below or attach a file to get going.</div>
+          </div>
+        }
         <div #autoScroll class="chat-messages">
           <div #videoContainer></div>
           @for (message of messages; track message; let i = $index) {
