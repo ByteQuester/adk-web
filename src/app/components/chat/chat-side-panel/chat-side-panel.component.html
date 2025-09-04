@@ -10,9 +10,11 @@
         aria-label="Select event"
       >
       </mat-paginator>
-      <button mat-mini-fab>
-        <mat-icon (click)="closePanel.emit()">close</mat-icon>
-      </button>
+      @if (showClose) {
+        <button mat-mini-fab>
+          <mat-icon (click)="closePanel.emit()">close</mat-icon>
+        </button>
+      }
     </div>
   </div>
   <div>

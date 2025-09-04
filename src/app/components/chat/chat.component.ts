@@ -13,7 +13,7 @@ import {instance} from '@viz-js/viz';
 import {BehaviorSubject, catchError, combineLatest, distinctUntilChanged, filter, map, Observable, of, shareReplay, switchMap, take, tap} from 'rxjs';
 import stc from 'string-to-color';
 import { ROOT_AGENT, CustomPaginatorIntl, BIDI_STREAMING_RESTART_WARNING, LLM_REQUEST_KEY, LLM_RESPONSE_KEY } from './core/chat.constants';
-import { formatBase64Data, createDefaultArtifactName, processThoughtText, updateRedirectUri } from './core/chat.utils';
+import { formatBase64Data, createDefaultArtifactName, processThoughtText, updateRedirectUri, sanitizeContentText } from './core/chat.utils';
 import { ChatMessage, ArtifactView, EventData } from './core/chat.models';
 
 import {URLUtil} from '../../../utils/url-util';
@@ -443,9 +443,16 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       this.isSessionUrlEnabledObs.subscribe((sessionUrlEnabled) => {
         const sessionUrl = this.activatedRoute.snapshot.queryParams['session'];
 
+        // Defer creating a session until user first interacts (send message or attach file)
         if (!sessionUrlEnabled || !sessionUrl) {
-          this.createSessionAndReset();
-
+          // Just clear view state; session will be created lazily on first interaction
+          this.eventData = new Map<string, any>();
+          this.eventMessageIndexArray = [];
+          this.messages = [];
+          this.artifacts = [];
+          this.userInput = '';
+          this.longRunningEvents = [];
+          this.sessionId = '';
           return;
         }
 
@@ -455,7 +462,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
                       this.openSnackBar(
                           'Cannot find specified session. Creating a new one.',
                           'OK');
-                      this.createSessionAndReset();
+                      // Lazily create later instead of immediately
                       return of(null);
                     }))
               .subscribe((session) => {
@@ -494,6 +501,23 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async sendMessage(event: Event) {
+    // Lazy session creation: if no session yet, create before sending
+    if (!this.sessionId) {
+      await new Promise<void>((resolve) => {
+        this.sessionService.createSession(this.userId, this.appName)
+          .subscribe((res) => {
+            this.currentSessionState = res.state;
+            this.sessionId = res.id;
+            this.sessionTab.refreshSession();
+            this.isSessionUrlEnabledObs.subscribe((enabled) => {
+              if (enabled) {
+                this.updateSelectedSessionUrl();
+              }
+            });
+            resolve();
+          });
+      });
+    }
     await this.chatStreamService.sendMessage(this, event);
   }
 
@@ -629,7 +653,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
       };
       this.eventMessageIndexArray[index] = part.inlineData;
     } else if (part.text) {
-      message.text = part.text;
+      message.text = sanitizeContentText(part.text);
       message.thought = part.thought ? true : false;
       if (e?.groundingMetadata && e.groundingMetadata.searchEntryPoint &&
         e.groundingMetadata.searchEntryPoint.renderedContent) {
@@ -637,7 +661,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
           e.groundingMetadata.searchEntryPoint.renderedContent;
       }
       message.eventId = e?.id;
-      this.eventMessageIndexArray[index] = part.text;
+      this.eventMessageIndexArray[index] = message.text;
     } else if (part.functionCall) {
       message.functionCall = part.functionCall;
       message.eventId = e?.id;
@@ -1197,6 +1221,15 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   
+  // Derive a clean tool label from message parts
+  getMessageToolLabel(message: any): string {
+    const raw = message?.functionCall?.name || message?.functionResponse?.name || '';
+    return this.sanitizeToolName(raw);
+  }
+
+  private sanitizeToolName(name: string): string {
+    return (name || '').replace(/\s*tool reported:?$/i, '');
+  }
   // Helper method to dynamically inject the style
   private injectCustomIconColorStyle(className: string, color: string): void {
     // Check if the style already exists to prevent duplicates

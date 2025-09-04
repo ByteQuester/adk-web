@@ -71,6 +71,7 @@
         [rawSvgString]="rawSvgString"
         [llmRequest]="llmRequest"
         [llmResponse]="llmResponse"
+        [showClose]="true"
         (page)="handlePageEvent($event)"
         (closePanel)="closeSelectedEvent()"
         (viewImage)="openViewImageDialog($event)"
@@ -92,8 +93,8 @@
           <div class="empty-state-container">
             @if (((apps$ | async) || []).length > 0) {
               <span
-                >Welcome to ADK!<br />
-                Select an agent on the left to begin with.</span
+                >Welcome!<br />
+                Select an agent to begin.</span
               >
             } @else {
               <div>
@@ -466,6 +467,7 @@
           [userId]="userId"
           [appName]="appName"
           [sessionId]="sessionId"
+          [showClose]="true"
           (panelClosed)="closeTraceEventDetailPanel()"
         ></app-trace-event>
       </div>
@@ -520,6 +522,7 @@
                 [rawSvgString]="rawSvgString"
                 [llmRequest]="llmRequest"
                 [llmResponse]="llmResponse"
+                [showClose]="false"
                 (page)="handlePageEvent($event)"
                 (closePanel)="closeDeepDive()"
                 (viewImage)="openViewImageDialog($event)"

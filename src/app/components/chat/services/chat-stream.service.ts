@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { createDefaultArtifactName, formatBase64Data, processThoughtText } from '../core/chat.utils';
+import { createDefaultArtifactName, formatBase64Data, processThoughtText, sanitizeContentText } from '../core/chat.utils';
 import { getMediaTypeFromMimetype } from '../../artifact-tab/artifact-tab.component';
 import { ChatArtifactService } from './chat-artifact.service';
 import { ChatOauthService } from './chat-oauth.service';
@@ -213,7 +213,7 @@ export class ChatStreamService {
           nextText = previousText + newChunk;
         }
         // Directly update the visible text for smooth, immediate streaming
-        ctx.streamingTextMessage.text = nextText;
+        ctx.streamingTextMessage.text = sanitizeContentText(nextText);
         this.store.streamingTextMessage.set(ctx.streamingTextMessage);
         // Keep event index updated with the latest full text
         this.storeEvents(ctx, part, chunkJson, index);
@@ -308,13 +308,13 @@ export class ChatStreamService {
       };
       ctx.eventMessageIndexArray[index] = part.inlineData;
     } else if (part.text) {
-      message.text = part.text;
+      message.text = sanitizeContentText(part.text);
       message.thought = part.thought ? true : false;
       if (e?.groundingMetadata && e.groundingMetadata.searchEntryPoint && e.groundingMetadata.searchEntryPoint.renderedContent) {
         message.renderedContent = e.groundingMetadata.searchEntryPoint.renderedContent;
       }
       message.eventId = e?.id;
-      ctx.eventMessageIndexArray[index] = part.text;
+      ctx.eventMessageIndexArray[index] = message.text;
     } else if (part.functionCall) {
       message.functionCall = part.functionCall;
       message.eventId = e?.id;
@@ -352,7 +352,10 @@ export class ChatStreamService {
     } else if (sourceEvent?.author && sourceEvent.author !== 'bot') {
       toolName = sourceEvent.author;
     }
-    if (!toolName) toolName = sourceEvent?.actions?.toolName || sourceEvent?.functionCall?.name || 'tool';
+    if (!toolName) {
+      const raw = sourceEvent?.actions?.toolName || sourceEvent?.functionCall?.name || 'tool';
+      toolName = (raw || '').replace(/\s*tool reported:?$/i, '');
+    }
 
     // Show a human-readable placeholder instead of an empty bubble while fetching
     const message = { role: 'bot', text: `Using ${toolName}…`, pendingArtifact: true, toolName, pendingArtifactId: artifactId } as any;

@@ -42,10 +42,11 @@
   width: 100%;
   height: 100%;
   max-width: 100%;
-  margin: auto;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   flex: 1;
+  align-items: center;
 }
 
 .event-container {
@@ -86,6 +87,7 @@
   background-color: var(--surface-bg);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-l);
+  width: min(1100px, 100%);
 }
 
 .loading-bar {

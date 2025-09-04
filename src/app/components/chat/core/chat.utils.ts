@@ -19,7 +19,15 @@ export function createDefaultArtifactName(mimeType: string): string {
 }
 
 export function processThoughtText(text: string) {
-  return text.replace('/*PLANNING*/', '').replace('/*ACTION*/', '');
+  const withoutMarkers = (text || '')
+    .replace('/*PLANNING*/', '')
+    .replace('/*ACTION*/', '');
+  return sanitizeContentText(withoutMarkers);
+}
+
+export function sanitizeContentText(text: string) {
+  const pattern = /^\s*(?:[\w\- ]+\s+)?(?:tool|agent)\s+reported:?\s*/i;
+  return (text || '').replace(pattern, '');
 }
 
 export function updateRedirectUri(urlString: string, newRedirectUri: string): string {

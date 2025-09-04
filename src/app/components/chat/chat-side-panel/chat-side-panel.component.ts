@@ -15,6 +15,7 @@ export class ChatSidePanelComponent {
   @Input() rawSvgString: string | null = null;
   @Input() llmRequest: any;
   @Input() llmResponse: any;
+  @Input() showClose: boolean = true;
 
   @Output() closePanel = new EventEmitter<void>();
   @Output() page = new EventEmitter<any>();

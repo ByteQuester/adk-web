@@ -22,6 +22,7 @@
     <span class="spacer"></span>
 
     <ng-container *ngIf="isChatRoute()">
+      <div class="segmented-center">
       <div class="segmented" role="tablist" aria-label="Main view" (keydown)="onSegmentedKeydown($event)">
         <div class="highlight" [style.transform]="chatMainTab() === 'chat' ? 'translateX(0)' : 'translateX(100%)'"></div>
         <button class="segment" role="tab" [attr.aria-selected]="chatMainTab() === 'chat'" (click)="setChatMainTab('chat')">
@@ -32,6 +33,7 @@
           <mat-icon>dashboard</mat-icon>
           Features
         </button>
+      </div>
       </div>
       <button mat-icon-button matTooltip="Toggle left panel" (click)="onToggleLeftPanel()" style="margin-left: 8px;">
         <mat-icon>left_panel_close</mat-icon>

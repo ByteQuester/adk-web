@@ -106,4 +106,5 @@ export class EventTabComponent implements OnChanges {
         requestJson.contents.filter((c: any) => c.role == 'user').at(-1)
     return userContent?.parts?.[0]?.text ?? '[attachment]';
   }
+  
 }
